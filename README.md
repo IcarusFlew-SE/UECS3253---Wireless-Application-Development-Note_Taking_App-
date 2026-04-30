@@ -25,22 +25,22 @@ NoteNester is a modern, feature-rich note-taking application built with React Na
 ## Installation
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/note-taking-app.git
+   git clone https://github.com/IcarusFlew-SE/UECS3253---Wireless-Application-Development-Note_Taking_App-.git
    ```
 
 2. **Navigate to the project directory**
    ```bash
-   cd note-taking-app
+   cd NoteTakingApp
    ```
 
 3. **Install dependencies**
    ```bash
-   npm install
+   npm install ...
    ```
 
 4. **Start the development server**
    ```bash
-   npm start
+   npx react-native start
    ```
 
 ---
@@ -90,9 +90,11 @@ src/
 ├── components/          # Reusable UI components
 │   ├── NoteCard.tsx      # Component for displaying notes
 │   ├── CategoryChip.tsx  # Component for displaying categories
+|   |── FAB.tsx           # Component for floating action button
+|   |── LoadingSkeleton.tsx # Component for loading skeleton
+|   |── InputField.tsx    # Component for input field
 │   ├── ThemeToggle.tsx   # Component for switching themes
 │   ├── EmptyState.tsx    # Component for empty state
-│   ├── NoteList.tsx      # Component for displaying note list
 │   └── SearchBar.tsx     # Component for searching notes
 ├── constants/           # Constant values and configurations
 ├── navigation/          # Navigation setup

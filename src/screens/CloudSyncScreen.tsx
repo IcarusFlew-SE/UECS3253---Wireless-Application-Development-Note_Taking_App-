@@ -31,7 +31,7 @@ const CloudSyncScreen = () => {
         </View>
       </View>
 
-      {/* Account Section */}
+
       <View style={[styles.section, { backgroundColor: colors.secondaryBg, borderColor: colors.border }]}> 
         <View style={styles.row}>
           <View style={[styles.iconBox, { backgroundColor: `${tokens.colors.primary.base}20` }]}>
@@ -44,7 +44,7 @@ const CloudSyncScreen = () => {
         </View>
       </View>
 
-      {/* Theme Toggle Section */}
+
       <View style={[styles.section, { backgroundColor: colors.secondaryBg, borderColor: colors.border }]}>
         <View style={styles.row}>
           <Moon size={16} color={colors.subtext} />
@@ -54,18 +54,6 @@ const CloudSyncScreen = () => {
             onValueChange={() => setMode(isDark ? 'light' : 'dark')}
             trackColor={{ false: tokens.colors.border.primary, true: tokens.colors.primary.base }}
           />
-        </View>
-      </View>
-
-      {/* Sync Action */}
-      <View style={[styles.section, { backgroundColor: colors.secondaryBg, borderColor: colors.border }]}> 
-        <View style={styles.row}>
-          <Moon size={18} color={colors.subtext} />
-          <Text style={[styles.rowText, { color: colors.text }]}>Dark mode</Text>
-          <Switch 
-            value={isDark} 
-            onValueChange={() => setMode(isDark ? 'light' : 'dark')} 
-            trackColor={{ false: tokens.colors.border.primary, true: tokens.colors.primary.base }} />
         </View>
       </View>
 

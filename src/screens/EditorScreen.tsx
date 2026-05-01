@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image } from 'react-native';
-import { ChevronLeft } from 'lucide-react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image, Alert } from 'react-native';
+import { Archive, ChevronLeft } from 'lucide-react-native';
 import { useTheme } from '../themes/ThemeContext';
 import { tokens } from '../themes/theme';
 import NoteService from '../services/NoteService';
+import AuthService from '../services/AuthService';
 
 const EditorScreen = ({ navigation, route }: any) => {
   const { colors } = useTheme();
@@ -23,13 +24,24 @@ const EditorScreen = ({ navigation, route }: any) => {
     });
   }, [noteId]);
 
+  const appendMarkdown = (token: string) => setBody(prev => `${prev}${prev ? '\n' : ''}${token}`);
+
   const onSave = () => {
     NoteService.saveNote({ id, title, body, color: noteColor, category: 'Ideas', isPinned: false }, () => navigation.goBack());
   };
 
+  const onArchive = async () => {
+    if (!noteId) return;
+    try {
+      await AuthService.ensureAnonymousSignIn();
+      NoteService.archiveNote(noteId, () => navigation.goBack());
+    } catch (e) {
+      Alert.alert('Authentication required', 'Please configure Firebase Auth to archive notes.');
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Top Bar */};
       <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
         <TouchableOpacity 
           onPress={() => navigation.goBack()} 
@@ -43,20 +55,34 @@ const EditorScreen = ({ navigation, route }: any) => {
           </View>
           <Text style={[styles.noteName, { color: colors.text }]}>{title || 'Untitled note'}</Text>
         </View>
-        <TouchableOpacity style={styles.saveBtn} onPress={onSave}>
-          <Text style={styles.saveText}>Save</Text>
-        </TouchableOpacity>
+        <View style={styles.actionsRow}>
+          {noteId ? (
+            <TouchableOpacity style={styles.archiveBtn} onPress={onArchive}>
+              <Archive size={16} color="#fff" />
+            </TouchableOpacity>
+          ) : null}
+          <TouchableOpacity style={styles.saveBtn} onPress={onSave}>
+            <Text style={styles.saveText}>Save</Text>
+          </TouchableOpacity>
+        </View>
       </View>
       <View style={[styles.colorStrip, { backgroundColor: noteColor }]} />
       <ScrollView style={styles.editorArea}>
-        <TextInput 
-          style={[styles.titleInput, { color: colors.text }]} placeholder="Note Title" 
-          value={title} onChangeText={setTitle} />
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          <TextInput 
-            style={[styles.bodyInput, { color: colors.subtext }]} placeholder="Start typing your note..." 
-            multiline value={body} onChangeText={setBody} />
-        </ScrollView>
+         <TextInput style={[styles.titleInput, { color: colors.text }]} placeholder="Note Title" value={title} onChangeText={setTitle} />
+        <View style={[styles.divider, { backgroundColor: colors.border }]} />
+        <View style={styles.markdownToolbar}>
+          <TouchableOpacity onPress={() => appendMarkdown('**bold text**')}><Text style={[styles.mdBtn, { color: colors.text }]}>Bold</Text></TouchableOpacity>
+          <TouchableOpacity onPress={() => appendMarkdown('_italic text_')}><Text style={[styles.mdBtn, { color: colors.text }]}>Italic</Text></TouchableOpacity>
+          <TouchableOpacity onPress={() => appendMarkdown('- list item')}><Text style={[styles.mdBtn, { color: colors.text }]}>List</Text></TouchableOpacity>
+        </View>
+        <TextInput
+          style={[styles.bodyInput, { color: colors.subtext }]}
+          placeholder="Start typing your note..."
+          multiline
+          value={body}
+          onChangeText={setBody}
+        />
+      </ScrollView>
       <View style={[styles.footer, { borderTopColor: colors.border }]}>
         <Text style={[styles.footerLabel, { color: colors.subtext }]}>Accent color</Text>
         <ScrollView 
@@ -117,6 +143,16 @@ const styles = StyleSheet.create({
     fontWeight: '700', 
     marginTop: 2 
   },
+  actionsRow: { 
+    flexDirection: 'row', 
+    gap: 8 
+  },
+  archiveBtn: { 
+    backgroundColor: '#EF4444', 
+    paddingHorizontal: 12, 
+    justifyContent: 'center', 
+    borderRadius: 10 
+  },
   saveBtn: { 
     backgroundColor: tokens.colors.primary.base, 
     paddingHorizontal: 14, 
@@ -137,7 +173,7 @@ const styles = StyleSheet.create({
   editorArea: { 
     flex: 1, 
     paddingHorizontal: 16, 
-    paddingTop: 8
+    paddingTop: 8 
   },
   titleInput: { 
     fontSize: 30, 
@@ -147,6 +183,15 @@ const styles = StyleSheet.create({
   divider: { 
     height: 1, 
     marginBottom: 12 
+  },
+  markdownToolbar: { 
+    flexDirection: 'row', 
+    gap: 12, 
+    marginBottom: 8 
+  },
+  mdBtn: { 
+    fontWeight: '700', 
+    fontSize: 12 
   },
   bodyInput: { 
     fontSize: 18, 

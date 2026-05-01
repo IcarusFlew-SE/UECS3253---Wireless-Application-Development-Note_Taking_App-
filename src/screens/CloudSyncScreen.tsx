@@ -1,16 +1,24 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Switch, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Switch, Image, Alert } from 'react-native';
 import { User, RefreshCw, Moon } from 'lucide-react-native';
 import { useTheme } from '../themes/ThemeContext';
 import { tokens } from '../themes/theme';
+import { CloudSyncService } from '../services/CloudService';
 
 const CloudSyncScreen = () => {
   const { colors, setMode, isDark } = useTheme();
   const [isSyncing, setIsSyncing] = useState(false);
 
-  const handleSync = () => {
+  const handleSync = async () => {
     setIsSyncing(true);
-    setTimeout(() => setIsSyncing(false), 2000); // Simulated sync
+    try {
+      const count = await CloudSyncService.syncLocalToCloud('guest-user');
+      Alert.alert('Sync complete', `${count} notes uploaded to cloud.`);
+    } catch (e) {
+      Alert.alert('Sync failed', 'Please check cloud configuration and network.');
+    } finally { 
+      setIsSyncing(false);
+    }
   };
 
   return (
@@ -26,8 +34,13 @@ const CloudSyncScreen = () => {
       {/* Account Section */}
       <View style={[styles.section, { backgroundColor: colors.secondaryBg, borderColor: colors.border }]}> 
         <View style={styles.row}>
-          <View style={[styles.iconBox, { backgroundColor: `${tokens.colors.primary.base}20` }]}><User size={18} color={tokens.colors.primary.base} /></View>
-          <View style={styles.textColumn}><Text style={[styles.label, { color: colors.text }]}>Guest User</Text><Text style={[styles.subLabel, { color: colors.subtext }]}>Sync target: cloud-nest-db</Text></View>
+          <View style={[styles.iconBox, { backgroundColor: `${tokens.colors.primary.base}20` }]}>
+            <User size={18} color={tokens.colors.primary.base} />
+          </View>
+          <View style={styles.textColumn}>
+            <Text style={[styles.label, { color: colors.text }]}>Guest User</Text>
+            <Text style={[styles.subLabel, { color: colors.subtext }]}>Sync target: cloud-nest-db</Text>
+          </View>
         </View>
       </View>
 
@@ -46,10 +59,19 @@ const CloudSyncScreen = () => {
 
       {/* Sync Action */}
       <View style={[styles.section, { backgroundColor: colors.secondaryBg, borderColor: colors.border }]}> 
-        <View style={styles.row}><Moon size={18} color={colors.subtext} /><Text style={[styles.rowText, { color: colors.text }]}>Dark mode</Text><Switch value={isDark} onValueChange={() => setMode(isDark ? 'light' : 'dark')} trackColor={{ false: tokens.colors.border.primary, true: tokens.colors.primary.base }} /></View>
+        <View style={styles.row}>
+          <Moon size={18} color={colors.subtext} />
+          <Text style={[styles.rowText, { color: colors.text }]}>Dark mode</Text>
+          <Switch 
+            value={isDark} 
+            onValueChange={() => setMode(isDark ? 'light' : 'dark')} 
+            trackColor={{ false: tokens.colors.border.primary, true: tokens.colors.primary.base }} />
+        </View>
       </View>
 
-      <TouchableOpacity style={[styles.syncBtn, { backgroundColor: tokens.colors.primary.base }]} onPress={handleSync} disabled={isSyncing}>
+      <TouchableOpacity style={[styles.syncBtn, { backgroundColor: tokens.colors.primary.base }]} 
+        onPress={handleSync} 
+        disabled={isSyncing}>
         <RefreshCw size={18} color="#FFF" />
         <Text style={styles.syncBtnText}>{isSyncing ? 'Syncing...' : 'Sync now'}</Text>
       </TouchableOpacity>

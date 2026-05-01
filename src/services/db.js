@@ -1,32 +1,31 @@
-let SQLite = require("react-native-sqlite-storage");
+import SQLite from 'react-native-sqlite-storage';
 
-let db = SQLite.openDatabase(
-    {
-    name: 'notenest.sqlite',
-    location: 'default',
-    },
-    () => console.log('Database opened successfully'),
-    (error) => console.log('Database error:', error)
+SQLite.enablePromise(false);
+
+const db = SQLite.openDatabase({
+  name: 'notenest.sqlite',
+  location: 'default',
+}, () => console.log('Database opened successfully'),
+(error) => console.log('Database error:', error)
 );
 
-const initDatabase = () => {
-  db.executeSql(
-    `CREATE TABLE IF NOT EXISTS notes (
-    id TEXT PRIMARY KEY,
-    title TEXT,
-    body TEXT,
-    category TEXT,
-    color TEXT,
-    isPinned INTEGER,
-    lastUpdated INTEGER,
-    isSynced INTEGER DEFAULT 0
-    )`,
-    [],
-    () => console.log('Notes table initialized'),
-    (error) => console.log('Table Error: ', error)
-  );
+export const initDatabase = () => {
+  db.transaction(tx => {
+    tx.executeSql(
+      `CREATE TABLE IF NOT EXISTS notes (
+        id TEXT PRIMARY KEY NOT NULL,
+        title TEXT,
+        body TEXT,
+        category TEXT,
+        color TEXT,
+        isPinned INTEGER DEFAULT 0,
+        lastUpdated INTEGER,
+        isSynced INTEGER DEFAULT 0
+      )`,
+    );
+  });
 };
 
 initDatabase();
 
-module.export = db;
+export default db;

@@ -96,10 +96,9 @@ src/
 │   ├── ThemeToggle.tsx   # Component for switching themes
 │   ├── EmptyState.tsx    # Component for empty state
 │   └── SearchBar.tsx     # Component for searching notes
-├── constants/           # Constant values and configurations
+├── database/              # Database operations
 ├── navigation/          # Navigation setup
-│   ├── AppNavigator.tsx  # Main navigator
-│   └── routes.ts         # Route configurations
+│   └── AppNavigator.tsx  # Main navigator
 ├── screens/             # Application screens
 │   ├── HomeScreen.tsx    # Home screen with note list
 │   ├── NoteScreen.tsx    # Note detail screen
@@ -107,11 +106,13 @@ src/
 │   ├── EditNoteScreen.tsx # Edit existing note screen
 │   └── SettingsScreen.tsx # App settings screen
 ├── services/            # Business logic and API services
-│   ├── noteService.ts    # Note CRUD operations
-│   └── storageService.ts # AsyncStorage operations
+│   ├── NoteService.js    # Note CRUD operations
+|   ├── CloudSyncService.js # Cloud sync operations
+|   ├── SettingsService.js # Settings operations
+│   └── db.js             # Database operations
 ├── themes/              # Theme configurations
 │   ├── theme.ts          # Main theme configuration
-│   ├── ThemeContext.tsx  # Theme context for switching themes
-│   └── typography.ts     # Typography settings
-└── utils/               # Utility functions
-
+│   └── ThemeContext.tsx  # Theme context for switching themes
+├── utils/               # Utility functions
+|   ├── date.ts           # Date formatting
+|   └── logger.ts         # Logging utility

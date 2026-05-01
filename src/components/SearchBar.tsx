@@ -1,8 +1,7 @@
 import React, {useState} from "react";
 import { useTheme } from "../themes/ThemeContext";
 import { View, TextInput, StyleSheet, TouchableOpacity, Platform } from "react-native";
-import { Search, X} from "lucide-react-native";
-import { tokens } from '../themes/theme';
+import { Search, X} from "lucide-react-native"
 
 interface SearchBarProps {
     value: string;
@@ -22,26 +21,16 @@ const SearchBar: React.FC<SearchBarProps> = ({
     return (
         <View style={styles.outerContainer}>
             <View
-                style={[
-                    styles.container,
-                    {
-                        backgroundColor: colors.secondaryBg,
-                        borderColor: isFocused ? colors.primary : colors.border,
-                        elevation: isFocused ? 2 : 0,
-                    }
-                ]}
-                >
-                    <Search
-                        size={14}
-                        color={isFocused ? colors.primary : tokens.colors.text.subtle}
-                        style={styles.searchIcon}
-                    />
-                    <TextInput
-                        style={[styles.input, {color: colors.text}]}
+                style={[styles.container, { 
+                    backgroundColor: colors.secondaryBg,
+                    borderColor: isFocused ? colors.primary : colors.border 
+                }]}>
+                    <Search size={18} color={isFocused ? colors.primary : colors.subtext} style={styles.searchIcon} />
+                    <TextInput style={[styles.input, { color: colors.text }]}
                         value={value}
                         onChangeText={onChangeText}
                         placeholder={placeholder}
-                        placeholderTextColor={tokens.colors.text.muted}
+                        placeholderTextColor={colors.subtext}
                         onFocus={() => setIsFocused(true)}
                         onBlur={() => setIsFocused(false)}
                         selectionColor={colors.primary}
@@ -51,10 +40,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
                         <TouchableOpacity
                             onPress={() => {
                                 onChangeText('');
-                                if (onClear) onClear();
+                                onClear?.();
                             }}
                             hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-                            <X size={14} color={tokens.colors.text.subtle} />
+                            <X size={18} color={colors.subtext} />
                         </TouchableOpacity>
                     )}
                 </View>
@@ -63,26 +52,26 @@ const SearchBar: React.FC<SearchBarProps> = ({
 };
 
 const styles = StyleSheet.create({
-    outerContainer: {
-        paddingHorizontal: 12,
-        marginVertical: 8,
+    outerContainer: { 
+        paddingHorizontal: 16, 
+        marginVertical: 10 
     },
-    container: {
-        height: 40,
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 12,
-        borderRadius: 10, //tokens.radius.lg
-        borderWidth: 1,
+    container: { 
+        height: 48, 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        paddingHorizontal: 14, 
+        borderRadius: 14, 
+        borderWidth: 1 
     },
-    input: {
-        flex: 1,
-        fontSize: 9, // tokens.type.body.size
-        fontWeight: '400',
-        paddingVertical: Platform.OS === 'ios' ? 0 : 4,
+    input: { 
+        flex: 1, 
+        fontSize: 15, 
+        fontWeight: '500', 
+        paddingVertical: Platform.OS === 'ios' ? 0 : 4 
     },
-    searchIcon: {
-        marginRight: 8,
+    searchIcon: { 
+        marginRight: 10 
     },
 });
 

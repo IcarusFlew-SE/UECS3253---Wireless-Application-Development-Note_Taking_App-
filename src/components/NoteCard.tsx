@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Pin, ChevronRight } from 'lucide-react-native';
-import { useTheme } from '../themes/ThemeContext'; // Import your custom hook
+import { useTheme } from '../themes/ThemeContext';
 import { tokens } from '../themes/theme';
 
 interface NoteCardProps {
@@ -28,7 +28,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
 
   return (
     <TouchableOpacity 
-      activeOpacity={0.7} 
+      activeOpacity={0.8} 
       style={[
         styles.card, 
         { 
@@ -39,7 +39,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
       ]} 
       onPress={onPress}
     >
-      <View style={[styles.tag, { backgroundColor: `${categoryColor}22` }]}>
+      <View style={[styles.tag, { backgroundColor: `${categoryColor}26` }]}>
         <Text style={[styles.tagText, { color: categoryColor }]}>
           {category}
         </Text>
@@ -55,66 +55,59 @@ const NoteCard: React.FC<NoteCardProps> = ({
 
       <View style={styles.footer}>
         <Text style={[styles.time, { color: tokens.colors.text.faint }]}>{timestamp}</Text>
-        <View style={styles.footerIcons}>
-          {isPinned && (
-            <Pin 
-              size={8} 
-              color={colors.primary} 
-              fill={isDark ? `${colors.primary}30` : 'transparent'} 
-            />
-          )}
-          {!isPinned && (
-             <ChevronRight size={8} color={tokens.colors.text.faint} />
-          )}
-        </View>
+        {isPinned ? 
+          <Pin size={14} 
+            color={colors.primary} 
+            fill={isDark ? `${colors.primary}30` : 'transparent'} 
+          /> 
+            : 
+          <ChevronRight size={14} color={tokens.colors.text.faint} />
+        }
       </View>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  card: {
-    borderRadius: 10,
-    padding: 8,
-    borderLeftWidth: 2.5,
-    marginBottom: 6,
-    borderWidth: 0.5,
-  },
-  tag: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    borderRadius: 10,
-    marginBottom: 5,
-  },
-  tagText: {
-    fontSize: 7,
-    fontWeight: '500',
-  },
-  title: {
-    fontSize: 9,
-    fontWeight: '500',
-    lineHeight: 12,
-    marginBottom: 4,
-  },
-  body: {
-    fontSize: 8,
-    lineHeight: 11,
-    marginBottom: 6,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  time: {
-    fontSize: 7,
-  },
-  footerIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
+    card: { 
+        borderRadius: 16, 
+        padding: 14, 
+        borderLeftWidth: 3, 
+        marginBottom: 8, 
+        borderWidth: 1, 
+        minHeight: 150
+    },
+    tag: { 
+        alignSelf: 'flex-start', 
+        paddingHorizontal: 8, 
+        paddingVertical: 4, 
+        borderRadius: 99, 
+        marginBottom: 10 
+    },
+    tagText: { 
+        fontSize: 11, 
+        fontWeight: '600' 
+    },
+    title: { 
+        fontSize: 18, 
+        fontWeight: '700', 
+        lineHeight: 23, 
+        marginBottom: 8 
+    },
+    body: { 
+        fontSize: 14, 
+        lineHeight: 20, 
+        marginBottom: 10 
+    },
+    footer: { 
+        flexDirection: 'row', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        marginTop: 'auto' 
+    },
+    time: { 
+        fontSize: 12 
+    },
 });
 
 export default NoteCard;

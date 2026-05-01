@@ -22,18 +22,8 @@ const CategoryChip: React.FC<CategoryChipProps> = ({ label, isActive, onPress })
                     backgroundColor: isActive ? tokens.colors.primary.base : colors.secondaryBg,
                     borderColor: isActive ? tokens.colors.primary.light : colors.border,
                 },
-            ]}
-        >
-            <Text
-                style={[
-                    styles.label,
-                    {
-                        color: isActive ? '#FFFFFF' : colors.subtext,
-                    },
-                ]}
-                >
-                    {label}
-                </Text>
+            ]}>
+            <Text style={[styles.label, {color: isActive ? '#FFFFFF' : colors.subtext}]}>{label}</Text>
         </TouchableOpacity>
     );
 };

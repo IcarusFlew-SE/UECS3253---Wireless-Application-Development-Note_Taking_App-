@@ -2,19 +2,35 @@ export const tokens = {
     colors: {
         primary: { base: '#8579f3ff', light: '#a89fff', muted: '#7c6ff722'},
         accent: {
-            teal: '#14b8a6', gold: '#eab308', rose: '#f43f5e',
-            mint: '#22c55e', sky: '#388bdf8', coral: '#f97316'
+            teal: '#14b8a6', 
+            gold: '#eab308', 
+            rose: '#f43f5e',
+            mint: '#22c55e', 
+            sky: '#388BDF', 
+            coral: '#f97316'
         },
         text: {
-            primary: '#e2e0f0', title: '#dddaf5',
-            secondary: '#6b6b8a', muted: '#5a5a80',
-            subtle: '4a4a6a', faint: '3a3a58'
+            primary: '#e2e0f0', 
+            title: '#dddaf5',
+            secondary: '#6b6b8a', 
+            muted: '#5a5a80',
+            subtle: '#4A4A64', 
+            faint: '#3A3A58'
         },
         bg: {
-            app: '#0d0e1a', deep: '#0a0a18',
-            surface: { 1: '#141428', 2: '#1a1a2e', 3: '#1c1c30', nav: '#111122'}
+            app: '#0E1020',
+            deep: '#0A0D1A',
+            surface: { 
+                1: '#16182B', 
+                2: '#1D1F36', 
+                3: '#242641', 
+                nav: '#121427' 
+            },
         },
-        border: { primary: '#2a2a40', secondary: '1e1e32'}
+        border: { 
+            primary: '#2D3152', 
+            secondary: '#252947' 
+        },
     },
     spacing: { xs: '2px', sm: '4px', md: '6px', base: '8px', lg: '10px', xl: '12px', xxl: '14px', '3xl': '16px'},
     radius: { xz: '4px', sm: '6px', md: '8px', lg: '10px', xl: '12px', xxl: '20px', full: '9999px'},

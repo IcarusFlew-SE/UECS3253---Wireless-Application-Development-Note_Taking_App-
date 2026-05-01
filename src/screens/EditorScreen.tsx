@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image } from 'react-native';
 import { ChevronLeft } from 'lucide-react-native';
 import { useTheme } from '../themes/ThemeContext';
 import { tokens } from '../themes/theme';
@@ -14,22 +14,27 @@ const EditorScreen = ({ navigation, route }: any) => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Top Bar */}
+      {/* Top Bar */};
       <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.iconBtn, { backgroundColor: colors.secondaryBg }]}>
-          <ChevronLeft size={16} color={colors.text} />
+          <ChevronLeft size={18} color={colors.text} />
         </TouchableOpacity>
         <View style={styles.titleArea}>
-          <Text style={[styles.label, { color: tokens.colors.text.subtle }]}>Editing Note</Text>
-          <Text style={[styles.noteName, { color: colors.text }]}>{title || 'Untitled'}</Text>
+          <View style={styles.brandInline}>
+            <Image source={require('../assets/NoteNesterLogo.jpg')} style={styles.logoImage} />
+            <Text style={[styles.label, { color: colors.subtext }]}>NoteNest Editor</Text>
+          </View>
+          <Text style={[styles.noteName, { color: colors.text }]}>{title || 'Untitled note'}</Text>
         </View>
         <TouchableOpacity style={styles.saveBtn}>
           <Text style={styles.saveText}>Save</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Dynamic Color Strip */}
-      <View style={[styles.colorStrip, { backgroundColor: noteColor }]} />
+      {/* Dynamic Color Strip */};
+      <View style={[styles.colorStrip, {
+          backgroundColor: noteColor
+        }]} />
 
       <ScrollView style={styles.editorArea}>
         <TextInput
@@ -42,23 +47,22 @@ const EditorScreen = ({ navigation, route }: any) => {
         <View style={[styles.divider, { backgroundColor: colors.border }]} />
         <TextInput
           style={[styles.bodyInput, { color: colors.subtext }]}
-          placeholder="Start typing..."
-          placeholderTextColor={tokens.colors.text.faint}
-          multiline
-          value={body}
+          placeholder="Start typing your note..."
+          placeholderTextColor={tokens.colors.text.subtle}
+          multiline value={body}
           onChangeText={setBody}
         />
       </ScrollView>
 
-      {/* Color Picker[cite: 1] */}
+      {/* Color Picker*/}
       <View style={[styles.footer, { borderTopColor: colors.border }]}>
-        <Text style={styles.footerLabel}>Accent Color</Text>
+        <Text style={[styles.footerLabel, { color: colors.subtext }]}>Accent color</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.colorRow}>
-          {colorOptions.map((c) => (
+          {Object.values(tokens.colors.accent).map((c) => (
             <TouchableOpacity 
               key={c} 
-              onPress={() => setNoteColor(c)}
-              style={[styles.colorDot, { backgroundColor: c, borderWidth: noteColor === c ? 2 : 0, borderColor: '#FFF' }]} 
+              onPress={() => setNoteColor(c)} 
+              style={[styles.colorDot, { backgroundColor: c, borderWidth: noteColor === c ? 3 : 0, borderColor: '#FFF' }]} 
             />
           ))}
         </ScrollView>
@@ -68,83 +72,97 @@ const EditorScreen = ({ navigation, route }: any) => {
 };
 
 const styles = StyleSheet.create({
-    container: { 
-        flex: 1 
-    },
-    topBar: { 
-        flexDirection: 'row', 
-        alignItems: 'center', 
-        padding: 12, 
-        borderBottomWidth: 1 },
-    iconBtn: { 
-        padding: 6, 
-        borderRadius: 8 
-    },
-    titleArea: { 
-        flex: 1, 
-        marginLeft: 12 
-    },
-    label: { 
-        fontSize: 7, 
-        textTransform: 'uppercase' 
-    },
-    noteName: { 
-        fontSize: 10, 
-        fontWeight: '600' 
-    },
-    saveBtn: { 
-        backgroundColor: tokens.colors.primary.base, 
-        paddingHorizontal: 12, 
-        paddingVertical: 6, 
-        borderRadius: 8 
-    },
-    saveText: { 
-        color: '#FFF', 
-        fontSize: 9, 
-        fontWeight: '600' 
-    },
-    colorStrip: { 
-        height: 3, 
-        marginHorizontal: 12, 
-        borderRadius: 2, 
-        marginBottom: 8 
-    },
-    editorArea: { 
-        flex: 1, 
-        paddingHorizontal: 16 
-    },
-    titleInput: { 
-        fontSize: 14, 
-        fontWeight: '600', 
-        paddingVertical: 8 
-    },
-    divider: { 
-        height: 1, 
-        marginBottom: 12 
-    },
-    bodyInput: { 
-        fontSize: 10, 
-        lineHeight: 18, 
-        textAlignVertical: 'top' 
-    },
-    footer: { 
-        padding: 12, 
-        borderTopWidth: 1 
-    },
-    footerLabel: { 
-        fontSize: 7, 
-        color: tokens.colors.text.subtle, 
-        marginBottom: 8, 
-        textTransform: 'uppercase' 
-    },
-    colorRow: { 
-        gap: 10 
-    },
-    colorDot: { 
-        width: 16, 
-        height: 16, 
-        borderRadius: 8 
-    }
+  container: { 
+    flex: 1 
+  }, 
+  topBar: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    padding: 14, 
+    borderBottomWidth: 1 
+  }, 
+  iconBtn: { 
+    padding: 8, 
+    borderRadius: 12 
+  },
+  titleArea: { 
+    flex: 1, 
+    marginLeft: 12 
+  }, 
+  brandInline: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 8 
+  }, 
+  logoImage: { 
+    width: 18, 
+    height: 18, 
+    borderRadius: 5 
+  },
+  label: { 
+    fontSize: 12, 
+    textTransform: 'uppercase', 
+    letterSpacing: 0.4 
+  }, 
+  noteName: { 
+    fontSize: 18, 
+    fontWeight: '700', 
+    marginTop: 2 
+  },
+  saveBtn: { 
+    backgroundColor: tokens.colors.primary.base, 
+    paddingHorizontal: 14, 
+    paddingVertical: 8, 
+    borderRadius: 10 
+  }, 
+  saveText: { 
+    color: '#FFF', 
+    fontSize: 14, 
+    fontWeight: '700' 
+  },
+  colorStrip: { 
+    height: 4, 
+    marginHorizontal: 14, 
+    borderRadius: 4, 
+    marginTop: 10 
+  }, 
+  editorArea: { 
+    flex: 1, 
+    paddingHorizontal: 16, 
+    paddingTop: 8 
+  },
+  titleInput: { 
+    fontSize: 30, 
+    fontWeight: '700', 
+    paddingVertical: 8 
+  }, 
+  divider: { 
+    height: 1, 
+    marginBottom: 12 
+  }, 
+  bodyInput: { 
+    fontSize: 18, 
+    lineHeight: 28, 
+    minHeight: 320, 
+    textAlignVertical: 'top' 
+  },
+  footer: { 
+    padding: 14, 
+    borderTopWidth: 1 
+  }, 
+  footerLabel: { 
+    fontSize: 12, 
+    marginBottom: 10, 
+    textTransform: 'uppercase' 
+  }, 
+  colorRow: { 
+    gap: 12 
+  }, 
+  colorDot: { 
+    width: 26, 
+    height: 26, 
+    borderRadius: 13 
+  },
 });
 
 export default EditorScreen;

@@ -1,16 +1,86 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
-import { ChevronLeft } from 'lucide-react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { ChevronLeft, Trash2 } from 'lucide-react-native';
 import { useTheme } from '../themes/ThemeContext';
 import { tokens } from '../themes/theme';
+import { createNote, getNoteById, updateNote, deleteNote, validateNote } from '../services/noteService';
 
 const EditorScreen = ({ navigation, route }: any) => {
   const { colors } = useTheme();
   const [noteColor, setNoteColor] = useState(tokens.colors.accent.teal);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
+  const [category, setCategory] = useState('General');
 
   const colorOptions = Object.values(tokens.colors.accent);
+
+  // If noteId was passed via navigation, we are editing an existing note
+  const noteId = route?.params?.noteId;
+  const isEditing = !!noteId;
+
+  useEffect(() => {
+    if (isEditing) {
+      loadExistingNote();
+    }
+  }, [noteId]);
+
+  const loadExistingNote = async () => {
+    const note = await getNoteById(noteId);
+    if (note) {
+      setTitle(note.title);
+      setBody(note.content);
+      setCategory(note.category);
+    }
+  };
+
+  // SAVE (Create or Update)
+  const handleSave = async () => {
+    const validation = validateNote(title, body);
+    if (!validation.valid) {
+      Alert.alert('Cannot Save', validation.error);
+      return;
+    }
+
+    if (isEditing) {
+      const updated = await updateNote(noteId, title, body, category);
+      if (updated) {
+        navigation.goBack();
+      } else {
+        Alert.alert('Error', 'Failed to update note. Please try again.');
+      }
+    } else {
+      const created = await createNote(title, body, category);
+      if (created) {
+        navigation.goBack();
+      } else {
+        Alert.alert('Error', 'Failed to save note. Please try again.');
+      }
+    }
+  };
+
+  // DELETE
+  const handleDelete = () => {
+    Alert.alert(
+      'Delete Note',
+      'Are you sure? This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const success = await deleteNote(noteId);
+            if (success) {
+              navigation.goBack();
+            } else {
+              Alert.alert('Error', 'Failed to delete note.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -23,7 +93,16 @@ const EditorScreen = ({ navigation, route }: any) => {
           <Text style={[styles.label, { color: tokens.colors.text.subtle }]}>Editing Note</Text>
           <Text style={[styles.noteName, { color: colors.text }]}>{title || 'Untitled'}</Text>
         </View>
-        <TouchableOpacity style={styles.saveBtn}>
+        {/* Delete icon */}
+        {isEditing && (
+          <TouchableOpacity
+            onPress={handleDelete}
+            style={[styles.iconBtn, { backgroundColor: colors.secondaryBg, marginRight: 8 }]}
+          >
+            <Trash2 size={18} color="#ff4d4d" />
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
           <Text style={styles.saveText}>Save</Text>
         </TouchableOpacity>
       </View>

@@ -1,26 +1,58 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { View, StyleSheet, Text, FlatList, SafeAreaView, StatusBar, Image } from "react-native";
-import { NavigationProp } from "@react-navigation/native";
+import { NavigationProp, useFocusEffect } from "@react-navigation/native";
 import { useTheme } from "../themes/ThemeContext";
 import { tokens } from "../themes/theme";
 import SearchBar from "../components/SearchBar";
 import CategoryChip from "../components/CategoryChip";
 import NoteCard from "../components/NoteCard";
 import FAB from "../components/FAB";
-
-const dummyNotes = [
-    { id: '1', title: 'Project Outline', category: 'Work', preview: 'Outlining project scope...', color: '#f8d48c' },
-    { id: '2', title: 'Shopping List', category: 'Personal', preview: 'Milk, eggs, bread...', color: '#b6d2ff' },
-    { id: '3', title: 'Gym Plan', category: 'Ideas', preview: 'Chest, back, legs...', color: '#ffb2b2' },
-    { id: '4', title: 'Book Ideas', category: 'Study', preview: 'Sci-fi novel, fantasy series...', color: '#d3b1e6' }
-];
+import { getAllNotes, searchNotes } from "../services/noteService";
+import { Note } from "../types";
 
 const CATEGORIES = ['ALL', 'Work', 'Personal', 'Ideas', 'Study'];
+
+const CATEGORY_COLORS: Record<string, string> = {
+  Work: '#F8CFA6',
+  Personal: '#BED8FF',
+  Ideas: '#FFC0C0',
+  Study: '#D8C4F4',
+  General: '#C4F4D8',
+};
 
 const HomeScreen = ({ navigation }: { navigation: NavigationProp<any, any> }) => {
     const { colors, isDark } = useTheme();
     const [search, setSearch] = useState('');
     const [activeCat, setActiveCat] = useState('All'); // Track selected category
+    const [notes, setNotes] = useState<Note[]>([]);
+
+    // Reload notes every time this screen comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            loadNotes();
+        }, [])
+    );
+
+    const loadNotes = async () => {
+        const allNotes = await getAllNotes();
+        setNotes(allNotes);
+    };
+
+    const handleSearch = async (text: string) => {
+        setSearch(text);
+        if (text.trim() === '') {
+            loadNotes();
+        } else {
+            const results = await searchNotes(text);
+            setNotes(results);
+        }
+    };
+
+    // Filter by category on top of whatever notes are loaded
+    const filteredNotes = useMemo(
+        () => notes.filter(n => activeCat === 'ALL' || n.category === activeCat),
+        [activeCat, notes],
+    );
 
     const renderHeader = () => (
         <View style={styles.headerContainer}>
@@ -49,7 +81,7 @@ const HomeScreen = ({ navigation }: { navigation: NavigationProp<any, any> }) =>
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
             <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
             <FlatList
-                data={dummyNotes}
+                data={filteredNotes}
                 ListHeaderComponent={renderHeader}
                 numColumns={2}
                 keyExtractor={(item) => item.id}
@@ -58,11 +90,11 @@ const HomeScreen = ({ navigation }: { navigation: NavigationProp<any, any> }) =>
                     <View style={{ flex: 1, margin: 4 }}>
                         <NoteCard
                             title={item.title}
-                            body={item.body}
+                            body={item.content}
                             category={item.category}
-                            categoryColor={item.color}
+                            categoryColor={CATEGORY_COLORS[item.category] ?? '#C4F4D8'}
                             timestamp="2h ago"
-                            isPinned={item.isPinned}
+                            isPinned={false}
                             onPress={() => navigation.navigate('Editor', { noteId: item.id })}
                         />
                     </View>

@@ -1,61 +1,59 @@
-import React, {useState, useEffect, useRef} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Image,
-  Alert,
-} from 'react-native';
-import {useBottomTabBarHeight} from '@react-navigation/bottom-tabs';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {Archive, ChevronLeft, Trash2, Pin, Check} from 'lucide-react-native';
-import {BlurView} from '@react-native-community/blur';
-import {useTheme} from '../themes/ThemeContext';
-import {tokens} from '../themes/theme';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image, Alert} from 'react-native';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Archive, ChevronLeft, Trash2, Pin, Check } from 'lucide-react-native';
+import { BlurView } from '@react-native-community/blur';
+import { useTheme } from '../themes/ThemeContext';
+import { tokens } from '../themes/theme';
 import NoteService from '../services/NoteService';
 
 // Accent colour palette derived from theme tokens
 const ACCENT_COLORS = [
-  {label: 'Teal', value: tokens.colors.accent.teal},
-  {label: 'Gold', value: tokens.colors.accent.gold},
-  {label: 'Rose', value: tokens.colors.accent.rose},
-  {label: 'Mint', value: tokens.colors.accent.mint},
-  {label: 'Sky', value: tokens.colors.accent.sky},
-  {label: 'Coral', value: tokens.colors.accent.coral},
+  { label: 'Teal', value: tokens.colors.accent.teal },
+  { label: 'Gold', value: tokens.colors.accent.gold },
+  { label: 'Rose', value: tokens.colors.accent.rose },
+  { label: 'Mint', value: tokens.colors.accent.mint },
+  { label: 'Sky', value: tokens.colors.accent.sky },
+  { label: 'Coral', value: tokens.colors.accent.coral },
 ];
 
-const EditorScreen = ({navigation, route}: any) => {
-  const {colors, isDark} = useTheme();
+const EditorScreen = ({ navigation, route }: any) => {
+  const { colors, isDark } = useTheme();
   const noteId = route?.params?.noteId;
   const tabBarHeight = useBottomTabBarHeight();
   const insets = useSafeAreaInsets();
-
-  // Stable note ID — created once per editor session
-  const idRef = useRef<string>(noteId || `${Date.now()}`);
-  const id = idRef.current;
-
+  const [id] = useState(noteId || `${Date.now()}`);
   const [noteColor, setNoteColor] = useState(tokens.colors.accent.teal);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
-  const [categoryId, setCategoryId] = useState<number | null>(null);
+  const [categoryId, setCategoryId] = useState(3);
   const [isPinned, setIsPinned] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
-  const [isLoaded, setIsLoaded] = useState(!noteId); // new notes start as "loaded"
+  const [isLoaded, setIsLoaded] = useState(!noteId);
   const [isSaving, setIsSaving] = useState(false);
 
   // ── Load categories 
-  useEffect(() => {
-    NoteService.getCategories((cats: any[]) => {
-      setCategories(cats);
-      // Default to first category for new notes
-      if (!noteId && cats.length > 0) {
-        setCategoryId(cats[0].id);
+  const loadCategories = useCallback(() => {
+    NoteService.getCategories((items: any[]) => {
+      if (!items || items.length === 0) {
+        setTimeout(() => NoteService.getCategories(setCategories), 250);
+      } else {
+        setCategories(items);
       }
     });
-  }, [noteId]);
+  }, []);
+
+  useEffect(() => {
+    loadCategories();
+  }, [loadCategories]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadCategories();
+    }, [loadCategories]),
+  );
 
   // ── Load existing note 
   useEffect(() => {
@@ -72,7 +70,7 @@ const EditorScreen = ({navigation, route}: any) => {
     });
   }, [noteId]);
 
-  // ── Debounced auto-save (fires 1.5 s after last keystroke) ───────────────
+  // ── Debounced auto-save (fires 1.5 s after last keystroke) 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -327,7 +325,7 @@ const EditorScreen = ({navigation, route}: any) => {
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.chipRow}>
-          {ACCENT_COLORS.map(({label, value}) => {
+          {ACCENT_COLORS.map(({label, value}: {label: string; value: string}) => {
             const isSelected = noteColor === value;
             return (
               <TouchableOpacity

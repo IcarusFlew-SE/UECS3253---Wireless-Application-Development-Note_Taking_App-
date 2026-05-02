@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { View, StyleSheet, Text, FlatList, SafeAreaView, StatusBar, Image } from "react-native";
 import { NavigationProp, useFocusEffect } from "@react-navigation/native";
+import { FlashList } from "@shopify/flash-list";
 import { useTheme } from "../themes/ThemeContext";
 import SearchBar from "../components/SearchBar";
 import CategoryChip from "../components/CategoryChip";
@@ -28,46 +29,48 @@ const HomeScreen = ({ navigation }: { navigation: NavigationProp<any, any> }) =>
      return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-      <FlatList
-        data={filteredNotes}
-        ListHeaderComponent={
-          <View style={styles.headerContainer}>
-            <View style={styles.brandRow}>
-              <Image source={require('../assets/NoteNesterLogo.jpg')} style={styles.logoImage} />
-              <View>
-                <Text style={[styles.greeting, { color: colors.subtext }]}>Welcome back!</Text>
-                <Text style={[styles.logoText, { color: colors.text }]}>NoteNest</Text>
+      <View style={{flex: 1}}>
+        <FlashList
+          data={filteredNotes}
+          ListHeaderComponent={
+            <View style={styles.headerContainer}>
+              <View style={styles.brandRow}>
+                <Image source={require('../assets/NoteNesterLogo.jpg')} style={styles.logoImage} />
+                <View>
+                  <Text style={[styles.greeting, { color: colors.subtext }]}>Welcome back!</Text>
+                  <Text style={[styles.logoText, { color: colors.text }]}>NoteNest</Text>
+                </View>
               </View>
+              <SearchBar value={search} onChangeText={setSearch} />
+              <FlatList
+                horizontal 
+                showsHorizontalScrollIndicator={false} 
+                data={CATEGORIES} 
+                keyExtractor={item => item} 
+                renderItem={({ item }) => <CategoryChip label={item} isActive={activeCat === item} onPress={() => setActiveCat(item)} />} 
+                contentContainerStyle={styles.chipList} />
             </View>
-            <SearchBar value={search} onChangeText={setSearch} />
-            <FlatList
-              horizontal 
-              showsHorizontalScrollIndicator={false} 
-              data={CATEGORIES} 
-              keyExtractor={item => item} 
-              renderItem={({ item }) => <CategoryChip label={item} isActive={activeCat === item} onPress={() => setActiveCat(item)} />} 
-              contentContainerStyle={styles.chipList} />
-          </View>
-        }
-        ListEmptyComponent={<Text style={{ color: colors.subtext, textAlign: 'center', marginTop: 40 }}>No notes found. Tap + to create your first note.</Text>}
-        numColumns={2}
-        keyExtractor={item => item.id}
-        columnWrapperStyle={styles.gridRow}
-        renderItem={({ item }) => (
-          <View style={styles.cardWrap}>
-            <NoteCard 
-                title={item.title || 'Untitled'} 
-                body={item.body || ''} 
-                category={item.category || 'Ideas'} 
-                categoryColor={item.color || '#BED8FF'} 
-                timestamp="recent" 
-                isPinned={item.isPinned} 
-                onPress={() => navigation.navigate('Editor', { noteId: item.id })} 
-            />
-          </View>
-        )}
-        contentContainerStyle={styles.listContent}
-      />
+          }
+          ListEmptyComponent={<Text style={{ color: colors.subtext, textAlign: 'center', marginTop: 40 }}>No notes found. Tap + to create your first note.</Text>}
+          numColumns={2}
+          estimatedItemSize={200}
+          keyExtractor={item => item.id}
+          renderItem={({ item }) => (
+            <View style={styles.cardWrap}>
+              <NoteCard 
+                  title={item.title || 'Untitled'} 
+                  body={item.body || ''} 
+                  category={item.category || 'Ideas'} 
+                  categoryColor={item.categoryColor || '#BED8FF'} 
+                  timestamp="recent" 
+                  isPinned={item.isPinned} 
+                  onPress={() => navigation.navigate('Editor', { noteId: item.id })} 
+              />
+            </View>
+          )}
+          contentContainerStyle={styles.listContent}
+        />
+      </View>
       <FAB onPress={() => navigation.navigate('Editor')} />
     </SafeAreaView>
   );
@@ -103,13 +106,10 @@ const styles = StyleSheet.create({
         paddingTop: 6, 
         paddingBottom: 10 
     }, 
-    gridRow: { 
-        paddingHorizontal: 12, 
-        justifyContent: 'space-between' 
-    }, 
     cardWrap: { 
         flex: 1, 
-        margin: 6 
+        margin: 6,
+        paddingHorizontal: 6
     }, 
     listContent: { 
         paddingBottom: 100 

@@ -1,12 +1,16 @@
-import auth from '@react-native-firebase/auth';
+import { getApp } from '@react-native-firebase/app';
+import { getAuth, signInAnonymously } from '@react-native-firebase/auth';
+
+const app = getApp();
+const auth = getAuth(app);
 
 const AuthService = {
-  getCurrentUser: () => auth().currentUser,
+  getCurrentUser: () => auth.currentUser,
 
   ensureAnonymousSignIn: async () => {
-    const current = auth().currentUser;
+    const current = auth.currentUser;
     if (current) return current;
-    const credential = await auth().signInAnonymously();
+    const credential = await signInAnonymously(auth);
     return credential.user;
   },
 };

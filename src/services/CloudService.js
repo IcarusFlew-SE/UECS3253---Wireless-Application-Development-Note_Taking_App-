@@ -1,11 +1,23 @@
 import NetInfo from '@react-native-community/netinfo';
-import firestore from '@react-native-firebase/firestore';
+import { getApp } from '@react-native-firebase/app';
+import { 
+  getFirestore, 
+  collection, 
+  doc, 
+  writeBatch, 
+  getDocs,
+  setDoc,
+  query,
+  limit
+} from '@react-native-firebase/firestore';
 import getDb from '../database/db';
 
+const app = getApp();
+const firestoreDb = getFirestore(app);
 const db = getDb();
 
 const notesCollection = (userId) =>
-  firestore().collection('users').doc(userId).collection('notes');
+  collection(firestoreDb, 'users', userId, 'notes');
 
 const runSql = (sql, params = []) =>
   new Promise((resolve, reject) => {
@@ -46,12 +58,12 @@ export const CloudSyncService = {
   syncLocalToCloud: async userId => {
     await assertConnectivity();
     const result = await runSql('SELECT * FROM notes WHERE isSynced = 0', []);
-    const batch = firestore().batch();
+    const batch = writeBatch(firestoreDb);
     const ids = [];
 
     for (let i = 0; i < result.rows.length; i++) {
       const note = rowToNote(result.rows.item(i));
-      const docRef = notesCollection(userId).doc(note.id);
+      const docRef = doc(notesCollection(userId), note.id);
       batch.set(docRef, { ...note, isSynced: true }, { merge: true });
       ids.push(note.id);
     }
@@ -69,7 +81,7 @@ export const CloudSyncService = {
 
   syncCloudToLocal: async userId => {
     await assertConnectivity();
-    const snapshot = await notesCollection(userId).get();
+    const snapshot = await getDocs(notesCollection(userId));
 
     for (const docSnap of snapshot.docs) {
       const cloudNote = rowToNote(docSnap.data());
@@ -80,6 +92,7 @@ export const CloudSyncService = {
       const localNote = localResult.rows.length
         ? rowToNote(localResult.rows.item(0))
         : null;
+      
       if (!shouldReplaceLocal(localNote, cloudNote)) continue;
 
       await runSql(

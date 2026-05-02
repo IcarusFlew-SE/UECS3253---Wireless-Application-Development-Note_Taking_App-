@@ -1,17 +1,22 @@
-import { getApp } from '@react-native-firebase/app';
-import { getAuth, signInAnonymously } from '@react-native-firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const app = getApp();
-const auth = getAuth(app);
+const USER_ID_KEY = 'ws_user_id';
+
+const generateId = () => `user_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
 const AuthService = {
-  getCurrentUser: () => auth.currentUser,
+  getCurrentUser: async () => {
+    const uid = await AsyncStorage.getItem(USER_ID_KEY);
+    return uid ? { uid } : null;
+  },
 
   ensureAnonymousSignIn: async () => {
-    const current = auth.currentUser;
-    if (current) return current;
-    const credential = await signInAnonymously(auth);
-    return credential.user;
+    let uid = await AsyncStorage.getItem(USER_ID_KEY);
+    if (!uid) {
+      uid = generateId();
+      await AsyncStorage.setItem(USER_ID_KEY, uid);
+    }
+    return { uid };
   },
 };
 

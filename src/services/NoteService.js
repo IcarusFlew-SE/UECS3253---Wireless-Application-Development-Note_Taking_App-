@@ -1,4 +1,6 @@
 import getDb from '../database/db';
+import { CloudSyncService } from './CloudService';
+import AuthService from './AuthService'
 
 const db = getDb();
 
@@ -16,6 +18,42 @@ const rowsToArray = result => {
     notes.push(toNote(result.rows.item(i)));
   }
   return notes;
+};
+
+const withUser = async () => {
+  const user = await AuthService.ensureAnonymousSignIn();
+  return user.uid;
+};
+
+const syncCreateOrUpdate = async note => {
+  try {
+    const uid = await withUser();
+    await CloudSyncService.updateNote(uid, note.id, {
+      title: note.title,
+      body: note.body,
+      category_id: note.category_id || 3,
+      color: note.color,
+      isPinned: !!note.isPinned,
+      is_deleted: !!note.is_deleted,
+      is_archived: !!note.is_archived,
+      deleted_at: note.deleted_at || null,
+      archived_at: note.archived_at || null,
+      lastUpdated: Date.now(),
+    });
+  } catch {
+    try {
+      const uid = await withUser();
+      await CloudSyncService.createNote(uid, {
+        ...note,
+        category_id: note.category_id || 3,
+        isPinned: !!note.isPinned,
+        is_deleted: !!note.is_deleted,
+        is_archived: !!note.is_archived,
+      });
+    } catch (err) {
+      console.log('Cloud upsert failed:', err?.message || err);
+    }
+  }
 };
 
 const NoteService = {
@@ -40,8 +78,19 @@ const NoteService = {
         note.archived_at || null,
       ],
       (_, result) => {
-        console.log('[NoteService] Note saved:', note.id);
         cb?.(result);
+        syncCreateOrUpdate({
+          id: note.id,
+          title: note.title,
+          body: note.body,
+          category_id: note.category_id || 3,
+          color: note.color,
+          isPinned: !!note.isPinned,
+          is_deleted: !!note.is_deleted,
+          is_archived: !!note.is_archived,
+          deleted_at: note.deleted_at || null,
+          archived_at: note.archived_at || null,
+        });
       },
       (_, error) => {
         console.error('[NoteService] Save error:', error.message);
@@ -113,7 +162,10 @@ const NoteService = {
     db.executeSql(
       'UPDATE notes SET is_archived = 1, archived_at = ?, isSynced = 0 WHERE id = ?',
       [Date.now(), id],
-      (_, result) => cb?.(result),
+      (_, result) => {
+        cb?.(result);
+        withUser().then(uid => CloudSyncService.archiveNote(uid, id, true)).catch(() => {});
+      },
       (_, error) => {
         console.error('[NoteService] Archive error:', error.message);
         return false;
@@ -125,7 +177,10 @@ const NoteService = {
     db.executeSql(
       'UPDATE notes SET is_archived = 0, archived_at = NULL, isSynced = 0 WHERE id = ?',
       [id],
-      (_, result) => cb?.(result),
+      (_, result) => {
+        cb?.(result);
+        withUser().then(uid => CloudSyncService.archiveNote(uid, id, false)).catch(() => {});
+      },
       (_, error) => {
         console.error('[NoteService] Unarchive error:', error.message);
         return false;
@@ -157,7 +212,10 @@ const NoteService = {
        SET is_deleted = 1, deleted_at = ?, is_archived = 0, archived_at = NULL, isSynced = 0 
        WHERE id = ?`,
       [Date.now(), id],
-      (_, result) => cb?.(result),
+      (_, result) => {
+        cb?.(result);
+        withUser().then(uid => CloudSyncService.deleteNote(uid, id, false)).catch(() => {});
+      },
       (_, error) => {
         console.error('[NoteService] Trash error:', error.message);
         return false;
@@ -169,7 +227,10 @@ const NoteService = {
     db.executeSql(
       'UPDATE notes SET is_deleted = 0, deleted_at = NULL, is_archived = 0, archived_at = NULL, isSynced = 0 WHERE id = ?',
       [id],
-      (_, result) => cb?.(result),
+      (_, result) => {
+        cb?.(result);
+        withUser().then(uid => CloudSyncService.updateNote(uid, id, { is_deleted: false, deleted_at: null, lastUpdated: Date.now() })).catch(() => {});
+      },
       (_, error) => {
         console.error('[NoteService] Restore error:', error.message);
         return false;
@@ -181,7 +242,10 @@ const NoteService = {
     db.executeSql(
       'DELETE FROM notes WHERE id = ?',
       [id],
-      (_, result) => cb?.(result),
+      (_, result) => {
+        cb?.(result);
+        withUser().then(uid => CloudSyncService.deleteNote(uid, id, true)).catch(() => {});
+      },
       (_, error) => {
         console.error('[NoteService] Delete error:', error.message);
         return false;

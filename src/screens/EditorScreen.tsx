@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image} from 'react-native';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Archive, ChevronLeft, Trash2, Pin } from 'lucide-react-native';
 import { BlurView } from '@react-native-community/blur';
 import { useTheme } from '../themes/ThemeContext';
 import { tokens } from '../themes/theme';
 import NoteService from '../services/NoteService';
-import AuthService from '../services/AuthService';
 
 const EditorScreen = ({ navigation, route }: any) => {
   const { colors, isDark } = useTheme();
   const noteId = route?.params?.noteId;
+  const tabBarHeight = useBottomTabBarHeight();
+  const insets = useSafeAreaInsets();
   const [id] = useState(noteId || `${Date.now()}`);
   const [noteColor, setNoteColor] = useState(tokens.colors.accent.teal);
   const [title, setTitle] = useState('');
@@ -106,7 +109,7 @@ const EditorScreen = ({ navigation, route }: any) => {
         </View>
       </View>
       <View style={[styles.colorStrip, { backgroundColor: noteColor }]} />
-      <ScrollView style={styles.editorArea}>
+      <ScrollView style={styles.editorArea} contentContainerStyle={{ paddingBottom: 12}}>
          <TextInput style={[styles.titleInput, { color: colors.text }]} placeholder="Note Title" placeholderTextColor={colors.subtext} value={title} onChangeText={setTitle} />
         <View style={[styles.divider, { backgroundColor: colors.border }]} />
         <View style={styles.markdownToolbar}>
@@ -123,7 +126,15 @@ const EditorScreen = ({ navigation, route }: any) => {
           onChangeText={setBody}
         />
       </ScrollView>
-      <View style={[styles.footer, { borderTopColor: colors.border }]}>
+       <View
+        style={[
+          styles.footer,
+          {
+            borderTopColor: colors.border,
+            paddingBottom: Math.max(insets.bottom + 10, tabBarHeight + 10),
+          },
+        ]}
+      >
         <BlurView
            style={StyleSheet.absoluteFill}
            blurType={isDark ? "dark" : "light"}

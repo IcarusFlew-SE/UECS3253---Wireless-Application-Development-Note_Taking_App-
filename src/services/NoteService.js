@@ -1,4 +1,6 @@
-import db from '../database/db';
+import getDb from '../database/db';
+
+const db = getDb();
 
 const toNote = row => ({
   ...row,
@@ -52,16 +54,16 @@ const NoteService = {
     db.executeSql(
       `SELECT n.*, c.name as category, c.color as categoryColor 
       FROM notes n LEFT JOIN categories c ON c.id = n.category_id 
-      WHERE n.is_deleted = 0
+      WHERE n.is_deleted = 0 AND n.is_archived = 0
       ORDER BY n.isPinned DESC, n.lastUpdated DESC`,
       [],
       (_, result) => {
         const notes = [];
-        for (let i = 0; i < result.rows.length; i += 1) 
+        for (let i = 0; i < result.rows.length; i += 1)
           notes.push(toNote(result.rows.item(i)));
-        cb(notes);
-      },
-      error => console.log('List Error: ', error.message)
+          cb(notes);
+        },
+        error => console.log('List Error: ', error.message),
     );
   },
 

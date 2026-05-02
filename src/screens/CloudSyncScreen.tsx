@@ -53,7 +53,7 @@ const CloudSyncScreen = () => {
           </View>
           <View style={styles.textColumn}>
             <Text style={[styles.label, { color: colors.text }]}>{uid ? `Anonymous User (${uid.substring(0, 6)}...)` : 'Offline'}</Text>
-            <Text style={[styles.subLabel, { color: colors.subtext }]}>Persistence: SQLite (local) + Firebase Firestore (cloud)</Text>
+            <Text style={[styles.subLabel, { color: colors.subtext }]}>Data Persistence: SQLite (local) + Firebase Firestore (cloud)</Text>
             <Text style={[styles.subLabel, { color: colors.subtext, marginTop: 4 }]}>Last sync: {lastSync}</Text>
           </View>
         </View>

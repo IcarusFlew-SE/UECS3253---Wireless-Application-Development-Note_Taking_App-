@@ -87,23 +87,19 @@ export const AppNavigator = () => {
   const appState = useRef(AppState.currentState);
 
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', nextAppState => {
-      if (
-        appState.current.match(/active/) &&
-        nextAppState.match(/inactive|background/)
-      ) {
-        console.log('App has gone to the background! Triggering auto-sync...');
-        AuthService.ensureAnonymousSignIn().then(user => {
-           CloudSyncService.syncAll(user.uid);
-        }).catch(err => console.log('Auto sync error:', err));
-      }
-      appState.current = nextAppState;
-    });
-
-    return () => {
-      subscription.remove();
-    };
-  }, []);
+  const subscription = AppState.addEventListener('change', nextAppState => {
+    if (
+      appState.current.match(/active/) &&
+      nextAppState.match(/inactive|background/)
+    ) {
+      AuthService.ensureAnonymousSignIn()
+        .then(user => CloudSyncService.syncAll(user.uid))
+        .catch(err => console.warn('[AutoSync] Failed:', err.message));
+    }
+    appState.current = nextAppState;
+  });
+  return () => subscription.remove();
+}, []);
 
   return (
     <Drawer.Navigator

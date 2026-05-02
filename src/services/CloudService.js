@@ -1,4 +1,4 @@
-import { getApp } from '@react-native-firebase/app';
+import {getApp} from '@react-native-firebase/app';
 import {
   getFirestore,
   collection,
@@ -6,12 +6,13 @@ import {
   writeBatch,
   getDocs,
 } from '@react-native-firebase/firestore';
-import db from './db';
+import db from '../database/db';
 
 const app = getApp();
 const firestoreDb = getFirestore(app);
 
-const notesCollection = userId => collection(firestoreDb, 'users', userId, 'notes');
+const notesCollection = userId =>
+  collection(firestoreDb, 'users', userId, 'notes');
 
 const runSql = (sql, params = []) =>
   new Promise((resolve, reject) => {
@@ -21,19 +22,21 @@ const runSql = (sql, params = []) =>
       (_, result) => resolve(result),
       error => reject(error),
     );
-});
+  });
 
 const rowToNote = row => ({
   id: row.id,
   title: row.title,
   body: row.body,
-  category: row.category,
+  category_id: row.category_id,
   color: row.color,
   isPinned: !!row.isPinned,
   isSynced: !!row.isSynced,
   lastUpdated: row.lastUpdated,
   is_deleted: !!row.is_deleted,
   deleted_at: row.deleted_at || null,
+  is_archived: !!row.is_archived,
+  archived_at: row.archived_at || null,
 });
 
 export const CloudSyncService = {
@@ -44,7 +47,7 @@ export const CloudSyncService = {
 
     for (let i = 0; i < result.rows.length; i += 1) {
       const note = rowToNote(result.rows.item(i));
-        const docRef = doc(notesCollection(userId), note.id);
+      const docRef = doc(notesCollection(userId), note.id);
       batch.set(docRef, { ...note, isSynced: true });
       ids.push(note.id);
     }
@@ -52,38 +55,43 @@ export const CloudSyncService = {
     if (ids.length === 0) return 0;
 
     await batch.commit();
-    await Promise.all(ids.map(id => runSql('UPDATE notes SET isSynced = 1 WHERE id = ?', [id])));
+    await Promise.all(
+      ids.map(id => 
+        runSql('UPDATE notes SET isSynced = 1 WHERE id = ?', [id])
+      )
+    );
     return ids.length;
   },
-   syncCloudToLocal: async userId => {
+  syncCloudToLocal: async userId => {
     const snapshot = await getDocs(notesCollection(userId));
     const docs = snapshot.docs.map(docSnap => docSnap.data());
 
     await Promise.all(
       docs.map(note =>
         runSql(
-          'INSERT OR REPLACE INTO notes (id, title, body, category, color, isPinned, lastUpdated, isSynced, is_deleted, deleted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          'INSERT OR REPLACE INTO notes (id, title, body, category_id, color, isPinned, lastUpdated, isSynced, is_deleted, deleted_at, is_archived, archived_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
           [
             note.id,
             note.title || '',
             note.body || '',
-            note.category || 'General',
-            note.color || '#FFFFFF',
+            note.category_id || 3,
+            note.color || '#BED8FF',
             note.isPinned ? 1 : 0,
             note.lastUpdated || Date.now(),
             1,
             note.is_deleted ? 1 : 0,
             note.deleted_at || null,
+            note.is_archived ? 1 : 0,
+            note.archived_at || null,
           ],
         ),
       ),
     );
-
     return docs.length;
   },
 
   syncAll: async userId => {
-     const uploaded = await CloudSyncService.syncLocalToCloud(userId);
+    const uploaded = await CloudSyncService.syncLocalToCloud(userId);
     const downloaded = await CloudSyncService.syncCloudToLocal(userId);
     return { uploaded, downloaded };
   },

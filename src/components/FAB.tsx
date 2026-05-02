@@ -22,7 +22,7 @@ const FAB: React.FC<FABProps> = ({ onPress }) => {
 const styles = StyleSheet.create({
     fab: {
         position: 'absolute',
-        bottom: 24,
+        bottom: 90,
         right: 24,
         width: 58,
         height: 58,

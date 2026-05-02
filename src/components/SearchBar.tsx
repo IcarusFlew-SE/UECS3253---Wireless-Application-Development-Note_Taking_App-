@@ -3,6 +3,8 @@ import { useTheme } from "../themes/ThemeContext";
 import { View, TextInput, StyleSheet, TouchableOpacity, Platform } from "react-native";
 import { Search, X} from "lucide-react-native"
 
+import { BlurView } from '@react-native-community/blur';
+
 interface SearchBarProps {
     value: string;
     onChangeText: (text: string) => void;
@@ -16,15 +18,22 @@ const SearchBar: React.FC<SearchBarProps> = ({
     onClear,
     placeholder = "Search notes..."
 }) => {
-    const { colors } = useTheme();
+    const { colors, isDark } = useTheme();
     const [isFocused, setIsFocused] = useState(false);
     return (
         <View style={styles.outerContainer}>
             <View
                 style={[styles.container, { 
-                    backgroundColor: colors.secondaryBg,
                     borderColor: isFocused ? colors.primary : colors.border 
                 }]}>
+                    <BlurView
+                        style={StyleSheet.absoluteFill}
+                        blurType={isDark ? "dark" : "light"}
+                        blurAmount={20}
+                        reducedTransparencyFallbackColor={colors.secondaryBg}
+                    />
+                    <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.glassBg }]} />
+                    
                     <Search size={18} color={isFocused ? colors.primary : colors.subtext} style={styles.searchIcon} />
                     <TextInput style={[styles.input, { color: colors.text }]}
                         value={value}
@@ -62,7 +71,8 @@ const styles = StyleSheet.create({
         alignItems: 'center', 
         paddingHorizontal: 14, 
         borderRadius: 14, 
-        borderWidth: 1 
+        borderWidth: 1,
+        overflow: 'hidden'
     },
     input: { 
         flex: 1, 

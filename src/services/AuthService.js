@@ -5,11 +5,12 @@ const app = getApp();
 const auth = getAuth(app);
 
 const AuthService = {
+  getCurrentUser: () => auth.currentUser,
   ensureAnonymousSignIn: async () => {
     const current = auth.currentUser;
-        if (current) return current;
+    if (current) return current;
     const credential = await signInAnonymously(auth);
-        return credential.user;
+    return credential.user;
   },
 };
 

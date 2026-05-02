@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode, FC, Children } from 'react';
+import React, { createContext, useContext, useState, ReactNode, FC} from 'react';
 import { Appearance, useColorScheme } from 'react-native';
 import { theme } from './theme';
 

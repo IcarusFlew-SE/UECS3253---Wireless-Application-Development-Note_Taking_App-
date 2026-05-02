@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Pin, ChevronRight } from 'lucide-react-native';
 import { useTheme } from '../themes/ThemeContext';
 import { tokens } from '../themes/theme';
+import { BlurView } from '@react-native-community/blur';
 
 interface NoteCardProps {
   title: string;
@@ -32,13 +33,20 @@ const NoteCard: React.FC<NoteCardProps> = ({
       style={[
         styles.card, 
         { 
-          backgroundColor: colors.secondaryBg, // Dynamic background
           borderColor: colors.border,          // Dynamic border
           borderLeftColor: categoryColor       // Static category color
         }
       ]} 
       onPress={onPress}
     >
+      <BlurView
+        style={StyleSheet.absoluteFill}
+        blurType={isDark ? "dark" : "light"}
+        blurAmount={15}
+        reducedTransparencyFallbackColor={colors.secondaryBg}
+      />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.glassBg }]} />
+      
       <View style={[styles.tag, { backgroundColor: `${categoryColor}26` }]}>
         <Text style={[styles.tagText, { color: categoryColor }]}>
           {category}
@@ -75,7 +83,8 @@ const styles = StyleSheet.create({
         borderLeftWidth: 3, 
         marginBottom: 8, 
         borderWidth: 1, 
-        minHeight: 150
+        minHeight: 150,
+        overflow: 'hidden'
     },
     tag: { 
         alignSelf: 'flex-start', 

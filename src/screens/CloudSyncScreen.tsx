@@ -4,16 +4,23 @@ import { User, RefreshCw, Moon } from 'lucide-react-native';
 import { useTheme } from '../themes/ThemeContext';
 import { tokens } from '../themes/theme';
 import { CloudSyncService } from '../services/CloudService';
+import AuthService from '../services/AuthService';
 
 const CloudSyncScreen = () => {
   const { colors, setMode, isDark } = useTheme();
   const [isSyncing, setIsSyncing] = useState(false);
+  const [uid, setUid] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    AuthService.ensureAnonymousSignIn().then(user => setUid(user.uid)).catch(console.error);
+  }, []);
 
   const handleSync = async () => {
+    if (!uid) return Alert.alert('Error', 'Not authenticated');
     setIsSyncing(true);
     try {
-      const count = await CloudSyncService.syncLocalToCloud('guest-user');
-      Alert.alert('Sync complete', `${count} notes uploaded to cloud.`);
+      const { uploaded, downloaded } = await CloudSyncService.syncAll(uid);
+      Alert.alert('Sync complete', `Uploaded: ${uploaded}\nDownloaded: ${downloaded}`);
     } catch (e) {
       Alert.alert('Sync failed', 'Please check cloud configuration and network.');
     } finally { 
@@ -38,8 +45,9 @@ const CloudSyncScreen = () => {
             <User size={18} color={tokens.colors.primary.base} />
           </View>
           <View style={styles.textColumn}>
-            <Text style={[styles.label, { color: colors.text }]}>Guest User</Text>
+            <Text style={[styles.label, { color: colors.text }]}>{uid ? `Anonymous User (${uid.substring(0, 6)}...)` : 'Offline'}</Text>
             <Text style={[styles.subLabel, { color: colors.subtext }]}>Sync target: cloud-nest-db</Text>
+            <Text style={[styles.subLabel, { color: colors.subtext, marginTop: 4 }]}>Auto-sync: Enabled (runs when app closes)</Text>
           </View>
         </View>
       </View>
@@ -70,7 +78,8 @@ const CloudSyncScreen = () => {
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    padding: 20 
+    padding: 20,
+    paddingBottom: 100
   }, 
   brandRow: { 
     flexDirection: 'row', 

@@ -54,20 +54,22 @@ export const tokens = {
 export const theme = {
     dark: {
         background: '#0d0e1a',
-        secondaryBg: '#141428',
+        secondaryBg: 'rgba(20, 20, 40, 0.6)',
         primary: '#7C6FF7',
         text: '#E2E0F0',
         subtext: '#6B6B8A',
-        border: '#2A2A40',
-        accent: '#14B8A6'
+        border: 'rgba(226, 224, 240, 0.1)',
+        accent: '#14B8A6',
+        glassBg: 'rgba(255, 255, 255, 0.05)',
     },
     light: {
         background: '#f8f9fe',
-        secondaryBg: '#FFFFFF',
+        secondaryBg: 'rgba(255, 255, 255, 0.6)',
         primary: '#7C6FF7',
         text: '#1A1A2E',
         subtext: '#6B6B8A',
-        border: '#E2E0F0',
+        border: 'rgba(26, 26, 46, 0.1)',
         accent: '#14B8A6',
+        glassBg: 'rgba(255, 255, 255, 0.6)',
     }
 };

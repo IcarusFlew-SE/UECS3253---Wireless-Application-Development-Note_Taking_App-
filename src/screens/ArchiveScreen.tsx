@@ -12,13 +12,8 @@ const ArchiveScreen = () => {
   const load = useCallback(() => NoteService.getArchivedNotes(setNotes), []);
   useFocusEffect(useCallback(() => load(), [load]));
 
-  const onRestore = async (id: string) => {
-    try {
-      await AuthService.ensureAnonymousSignIn();
-      NoteService.restoreNote(id, () => load());
-    } catch (e) {
-      Alert.alert('Authentication required', 'Please configure Firebase Auth to restore archived notes.');
-    }
+  const onRestore = (id: string) => {
+    NoteService.restoreNote(id, () => load());
   };
 
   return (

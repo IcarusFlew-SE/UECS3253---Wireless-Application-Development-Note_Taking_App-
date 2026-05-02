@@ -1,64 +1,103 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image, Alert } from 'react-native';
-import { Archive, ChevronLeft } from 'lucide-react-native';
+import { Archive, ChevronLeft, Trash2, Pin } from 'lucide-react-native';
+import { BlurView } from '@react-native-community/blur';
 import { useTheme } from '../themes/ThemeContext';
 import { tokens } from '../themes/theme';
 import NoteService from '../services/NoteService';
 import AuthService from '../services/AuthService';
 
 const EditorScreen = ({ navigation, route }: any) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const noteId = route?.params?.noteId;
   const [id] = useState(noteId || `${Date.now()}`);
   const [noteColor, setNoteColor] = useState(tokens.colors.accent.teal);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
+  const [categoryId, setCategoryId] = useState(3);
+  const [isPinned, setIsPinned] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [isLoaded, setIsLoaded] = useState(!noteId);
+
+  useEffect(() => {
+    NoteService.getCategories(setCategories);
+  }, []);
 
   useEffect(() => {
     if (!noteId) return;
     NoteService.getNoteById(noteId, (note: any) => {
-      if (!note) return;
-      setTitle(note.title || '');
-      setBody(note.body || '');
-      setNoteColor(note.color || tokens.colors.accent.teal);
+      if (note) {
+        setTitle(note.title || '');
+        setBody(note.body || '');
+        setNoteColor(note.color || tokens.colors.accent.teal);
+        setCategoryId(note.category_id || 3);
+        setIsPinned(note.isPinned || false);
+      }
+      setIsLoaded(true);
     });
   }, [noteId]);
+
+  // Debounced Auto-Save
+  useEffect(() => {
+    if (!isLoaded) return;
+    const timer = setTimeout(() => {
+      NoteService.saveNote({ id, title, body, color: noteColor, category_id: categoryId, isPinned }, () => {});
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [title, body, noteColor, categoryId, isPinned, id, isLoaded]);
 
   const appendMarkdown = (token: string) => setBody(prev => `${prev}${prev ? '\n' : ''}${token}`);
 
   const onSave = () => {
-    NoteService.saveNote({ id, title, body, color: noteColor, category: 'Ideas', isPinned: false }, () => navigation.goBack());
+    NoteService.saveNote({ id, title, body, color: noteColor, category_id: categoryId, isPinned }, () => navigation.goBack());
   };
 
-  const onArchive = async () => {
+  const onTrash = () => {
     if (!noteId) return;
-    try {
-      await AuthService.ensureAnonymousSignIn();
-      NoteService.archiveNote(noteId, () => navigation.goBack());
-    } catch (e) {
-      Alert.alert('Authentication required', 'Please configure Firebase Auth to archive notes.');
-    }
+    NoteService.moveToTrash(noteId, () => navigation.goBack());
+  };
+
+  const onArchive = () => {
+    if (!noteId) return;
+    NoteService.archiveNote(noteId, () => navigation.goBack());
   };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
+        <BlurView
+           style={StyleSheet.absoluteFill}
+           blurType={isDark ? "dark" : "light"}
+           blurAmount={20}
+           reducedTransparencyFallbackColor={colors.background}
+        />
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.glassBg }]} />
         <TouchableOpacity 
           onPress={() => navigation.goBack()} 
-          style={[styles.iconBtn, { backgroundColor: colors.secondaryBg }]}>
-            <ChevronLeft size={18} color={colors.text} />
+          style={[styles.iconBtn, { backgroundColor: 'transparent' }]}>
+            <ChevronLeft size={24} color={colors.text} />
         </TouchableOpacity>
         <View style={styles.titleArea}>
           <View style={styles.brandInline}>
             <Image source={require('../assets/NoteNesterLogo.jpg')} style={styles.logoImage} />
             <Text style={[styles.label, { color: colors.subtext }]}>NoteNest Editor</Text>
           </View>
-          <Text style={[styles.noteName, { color: colors.text }]}>{title || 'Untitled note'}</Text>
+          <Text style={[styles.noteName, { color: colors.text }]} numberOfLines={1}>{title || 'Untitled note'}</Text>
         </View>
         <View style={styles.actionsRow}>
+          <TouchableOpacity 
+            style={[styles.actionBtn, { backgroundColor: isPinned ? colors.primary : colors.secondaryBg }]} 
+            onPress={() => setIsPinned(!isPinned)}>
+            <Pin size={16} color={isPinned ? "#FFF" : colors.text} />
+          </TouchableOpacity>
           {noteId ? (
             <TouchableOpacity style={styles.archiveBtn} onPress={onArchive}>
               <Archive size={16} color="#fff" />
+            </TouchableOpacity>
+          ) : null}
+          {noteId ? (
+            <TouchableOpacity style={styles.trashBtn} onPress={onTrash}>
+              <Trash2 size={16} color="#fff" />
             </TouchableOpacity>
           ) : null}
           <TouchableOpacity style={styles.saveBtn} onPress={onSave}>
@@ -68,7 +107,7 @@ const EditorScreen = ({ navigation, route }: any) => {
       </View>
       <View style={[styles.colorStrip, { backgroundColor: noteColor }]} />
       <ScrollView style={styles.editorArea}>
-         <TextInput style={[styles.titleInput, { color: colors.text }]} placeholder="Note Title" value={title} onChangeText={setTitle} />
+         <TextInput style={[styles.titleInput, { color: colors.text }]} placeholder="Note Title" placeholderTextColor={colors.subtext} value={title} onChangeText={setTitle} />
         <View style={[styles.divider, { backgroundColor: colors.border }]} />
         <View style={styles.markdownToolbar}>
           <TouchableOpacity onPress={() => appendMarkdown('**bold text**')}><Text style={[styles.mdBtn, { color: colors.text }]}>Bold</Text></TouchableOpacity>
@@ -76,15 +115,40 @@ const EditorScreen = ({ navigation, route }: any) => {
           <TouchableOpacity onPress={() => appendMarkdown('- list item')}><Text style={[styles.mdBtn, { color: colors.text }]}>List</Text></TouchableOpacity>
         </View>
         <TextInput
-          style={[styles.bodyInput, { color: colors.subtext }]}
+          style={[styles.bodyInput, { color: colors.text }]}
           placeholder="Start typing your note..."
+          placeholderTextColor={colors.subtext}
           multiline
           value={body}
           onChangeText={setBody}
         />
       </ScrollView>
       <View style={[styles.footer, { borderTopColor: colors.border }]}>
-        <Text style={[styles.footerLabel, { color: colors.subtext }]}>Accent color</Text>
+        <BlurView
+           style={StyleSheet.absoluteFill}
+           blurType={isDark ? "dark" : "light"}
+           blurAmount={20}
+           reducedTransparencyFallbackColor={colors.background}
+        />
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.glassBg }]} />
+        <Text style={[styles.footerLabel, { color: colors.text }]}>Category</Text>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          contentContainerStyle={styles.colorRow}>
+          {categories.map(c => (
+             <TouchableOpacity 
+               key={c.id} 
+               onPress={() => setCategoryId(c.id)} 
+               style={[styles.categoryBtn, { 
+                 backgroundColor: categoryId === c.id ? tokens.colors.primary.base : colors.secondaryBg, 
+                 borderColor: colors.border 
+               }]}>
+                 <Text style={{color: categoryId === c.id ? '#FFF' : colors.text, fontSize: 12, fontWeight: '600'}}>{c.name}</Text>
+             </TouchableOpacity>
+          ))}
+        </ScrollView>
+        <Text style={[styles.footerLabel, { color: colors.text, marginTop: 14 }]}>Accent color</Text>
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false} 
@@ -96,7 +160,7 @@ const EditorScreen = ({ navigation, route }: any) => {
               style={[styles.colorDot, { 
                 backgroundColor: c, 
                 borderWidth: noteColor === c ? 3 : 0, 
-                borderColor: '#FFF' }]}
+                borderColor: colors.text }]}
             />
           )}
         </ScrollView>
@@ -113,7 +177,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     alignItems: 'center', 
     padding: 14, 
-    borderBottomWidth: 1
+    borderBottomWidth: 1,
+    overflow: 'hidden'
   },
   iconBtn: { 
     padding: 8, 
@@ -147,8 +212,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     gap: 8 
   },
+  actionBtn: {
+    paddingHorizontal: 12, 
+    justifyContent: 'center', 
+    borderRadius: 10 
+  },
   archiveBtn: { 
     backgroundColor: '#EF4444', 
+    paddingHorizontal: 12, 
+    justifyContent: 'center', 
+    borderRadius: 10 
+  },
+   trashBtn: { 
+    backgroundColor: '#6b7280', 
     paddingHorizontal: 12, 
     justifyContent: 'center', 
     borderRadius: 10 
@@ -201,7 +277,8 @@ const styles = StyleSheet.create({
   },
   footer: { 
     padding: 14, 
-    borderTopWidth: 1 
+    borderTopWidth: 1,
+    overflow: 'hidden' 
   },
   footerLabel: { 
     fontSize: 12, 
@@ -216,6 +293,12 @@ const styles = StyleSheet.create({
     height: 26, 
     borderRadius: 13 
   },
+  categoryBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+  }
 });
 
 export default EditorScreen;

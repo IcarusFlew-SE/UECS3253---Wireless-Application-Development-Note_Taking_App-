@@ -1,7 +1,8 @@
 import React from 'react';
-import { Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from '../themes/ThemeContext';
 import { tokens } from '../themes/theme';
+import { BlurView } from '@react-native-community/blur';
 
 interface CategoryChipProps {
     label: string;
@@ -10,7 +11,7 @@ interface CategoryChipProps {
 }
 
 const CategoryChip: React.FC<CategoryChipProps> = ({ label, isActive, onPress }) => {
-    const {colors} = useTheme();
+    const {colors, isDark} = useTheme();
     return (
         <TouchableOpacity
             activeOpacity={0.8}
@@ -18,11 +19,16 @@ const CategoryChip: React.FC<CategoryChipProps> = ({ label, isActive, onPress })
             style={[
                 styles.chip,
                 {
-                    //Dynamic Backgroun
-                    backgroundColor: isActive ? tokens.colors.primary.base : colors.secondaryBg,
                     borderColor: isActive ? tokens.colors.primary.light : colors.border,
                 },
             ]}>
+            <BlurView
+                style={StyleSheet.absoluteFill}
+                blurType={isDark ? "dark" : "light"}
+                blurAmount={15}
+                reducedTransparencyFallbackColor={colors.secondaryBg}
+            />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: isActive ? tokens.colors.primary.base : colors.glassBg }]} />
             <Text style={[styles.label, {color: isActive ? '#FFFFFF' : colors.subtext}]}>{label}</Text>
         </TouchableOpacity>
     );
@@ -37,6 +43,7 @@ const styles = StyleSheet.create({
         marginRight: 8,
         justifyContent: 'center',
         alignItems: 'center',
+        overflow: 'hidden'
     },
     label: {
         fontSize: 8,

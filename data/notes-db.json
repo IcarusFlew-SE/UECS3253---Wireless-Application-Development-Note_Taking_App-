@@ -1,0 +1,20 @@
+{
+  "users": {
+    "user_1777723320126_5njet0gq": {
+      "1777736001998": {
+        "id": "1777736001998",
+        "title": "NNew  Notes",
+        "body": "",
+        "category_id": 1,
+        "color": "#eab308",
+        "isPinned": false,
+        "isSynced": true,
+        "lastUpdated": 1777736071762,
+        "is_deleted": false,
+        "deleted_at": null,
+        "is_archived": false,
+        "archived_at": null
+      }
+    }
+  }
+}

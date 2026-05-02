@@ -3,84 +3,127 @@
 ---
 ## Introduction
 NoteNester is a modern, feature-rich note-taking application built with React Native with AVD Emulator. It provides users with a seamless and intuitive platform to capture, organize, and manage their notes efficiently. The application supports CRUD operations, dynamic light/dark mode theme, smooth animated transitions, and various UI customization options.
+This project is a high-performance, **offline-first** mobile note-taking application built with **React Native 0.73**. It features real-time cloud synchronization, a sophisticated local database architecture, and a modern UI/UX designed for speed and reliability.
 
 ---
-## Features
-- **CRUD Operations**: Create, Read, Update, and Delete notes easily
-- **Dynamic Light/Dark Mode**: Switch between light and dark mode with a single click
-- **Smooth Animated Transitions**: Enjoy smooth animations and transitions
-- **UI Customization Options**: Customize the UI to your liking
-- **Note Organization**: Organize notes by categories and tags
-- **Search Functionality**: Search for notes by title or content
-- **Offline Support**: Access notes without an internet connection
-- **Cloud Sync** (Future): Sync notes across devices
+
+#### 🏗️ Architecture Overview
+
+The application follows a **Decoupled Service Architecture** with a strong emphasis on data integrity and availability.
+
+-   **Persistence Layer**: Utilizing `react-native-sqlite-storage` for local relational data management. This ensures the app is fully functional without an internet connection.
+-   **Synchronization Layer**: A custom-built **WebSocket Sync Engine** powered by `Socket.IO`. It implements a bi-directional sync strategy with a "last-write-wins" conflict resolution protocol based on microsecond timestamps.
+-   **Service Layer**: Business logic is encapsulated in singleton services (`NoteService`, `CloudSyncService`, `AuthService`), keeping components thin and focused on presentation.
+-   **UI Layer**: Leveraging `@shopify/flash-list` for O(1) list rendering performance and `react-native-reanimated` for 60fps fluid transitions.
 
 ---
-## Prerequisites
-- **React Native**: 0.68 or higher
-- **Node.js**: 14 or higher
-- **Android Studio**: Installed and configured with AVD Emulator
+
+#### 🛠️ Technical Stack
+
+**Frontend (Mobile)**
+-   **Framework**: React Native 0.73 (TypeScript)
+-   **State Management**: React Hooks & Context API for lightweight, reactive state.
+-   **Navigation**: React Navigation 6.x (Stack, Drawer, and Bottom Tabs).
+-   **Database**: SQLite (Local) + Socket.IO-client (Sync).
+-   **Styling**: Custom theme engine with Dark Mode support and dynamic color injection.
+-   **Icons**: Lucide React Native & Vector Icons.
+
+**Backend (Sync Server)**
+-   **Runtime**: Node.js 18+
+-   **Framework**: Express.js
+-   **Communication**: Socket.IO (WebSockets) for real-time events.
+-   **Persistence**: JSON-based flat-file storage for simplified deployment and low-latency access.
 
 ---
-## Installation
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/IcarusFlew-SE/UECS3253---Wireless-Application-Development-Note_Taking_App-.git
-   ```
 
-2. **Navigate to the project directory**
-   ```bash
-   cd NoteTakingApp
-   ```
+#### 📊 Database Schema
 
-3. **Install dependencies**
-   ```bash
-   npm install ...
-   ```
+The local SQLite database (`notenest.db`) is structured to support complex archival and trash workflows:
 
-4. **Start the development server**
-   ```bash
-   npx react-native start
-   ```
+| Table | Fields | Description |
+| :--- | :--- | :--- |
+| **`notes`** | `id (PK)`, `title`, `body`, `category_id`, `color`, `isPinned`, `lastUpdated`, `isSynced`, `is_deleted`, `is_archived`, `deleted_at`, `archived_at` | Primary storage for note content and metadata. |
+| **`categories`** | `id (PK)`, `name`, `color` | User-defined tags for organizational hierarchy. |
+
+---
+
+#### 🔄 Sync Logic & WebSocket Protocol
+
+The synchronization engine operates on a reactive event model:
+
+1.  **Join**: Client authenticates and joins a unique `user:${userId}` room.
+2.  **Push (Local → Cloud)**: Client identifies dirty records (`isSynced = 0`) and emits `syncLocalToCloud`.
+3.  **Pull (Cloud → Local)**: Client requests state delta via `syncCloudToLocal`.
+4.  **Real-time Broadcast**: When changes occur on one device, the server broadcasts `note:updated` or `note:created` to all other active sessions for that user.
+
+**Key Events:**
+-   `note:create` / `note:update`: Atomic operations for single note changes.
+-   `note:archive` / `note:delete`: Specialized events for state transitions (Trash/Archive).
+-   `syncAll`: A composite operation ensuring local and remote states are identical.
+
+---
+
+#### 🚀 Getting Started
+
+**Prerequisites:**
+-   Node.js >= 18
+-   React Native CLI
+-   Android Studio
+
+**1. Server Setup**
+```bash
+# From project root
+npm run server
+```
+*Note: The server runs on port 8080 by default. Ensure `10.0.2.2` (Android Emulator) or your local IP is configured in `CloudService.js`.*
+
+**2. Client Setup**
+```bash
+# Clone the repository
+git clone https://github.com/IcarusFlew-SE/UECS3253---Wireless-Application-Development-Note_Taking_App-.git
+
+# Install dependencies
+npm install
+
+# Start Metro Bundler
+npx react-native start
+
+# Run on Android
+npx react-native run-android
+```
+
+---
+
+#### 🧪 Quality & Optimization
+-   **FlashList Integration**: Replaces standard `FlatList` to reduce memory footprint and eliminate blank items during fast scrolls.
+-   **Atomic Writes**: Database transactions ensure that note saves and sync-state updates are atomic.
+-   **Connectivity Awareness**: Uses `@react-native-community/netinfo` to queue sync operations until a stable connection is established.
 
 ---
 ## Usage
-1. **Run on Android Emulator**
-   ```bash
-   npm run android
-   ```
-
-2. **Switch between light and dark mode**
+1. **Switch between light and dark mode**
    - Open the app
    - Click the theme toggle button in the top-right corner
 
-3. **Create a new note**
+2. **Create a new note**
    - Click the '+' button in the bottom-right corner
    - Enter the note title and content
    - Click 'Save'
 
-4. **Edit a note**
+3. **Edit a note**
    - Click on a note to open it
    - Click the edit icon in the top-right corner
    - Make changes and click 'Save'
 
-5. **Delete a note**
+4. **Delete a note**
    - Click on a note to open it
    - Click the trash icon in the top-right corner
    - Confirm deletion
 
-6. **Search for notes**
+5. **Search for notes**
    - Click the search icon in the top-right corner
    - Enter the search query
    - Notes will filter automatically
-
----
-## Tech Stack
-- **React Native**: Cross-platform mobile framework
-- **React Navigation**: Navigation between screens
-- **React Native Elements**: UI component library
-- **AsyncStorage**: Local data storage
-- **React Native Reanimated**: Smooth animations
 
 ---
 ## Project Structure
@@ -102,17 +145,16 @@ src/
 │   └── AppNavigator.tsx  # Main navigator
 ├── screens/             # Application screens
 │   ├── HomeScreen.tsx    # Home screen with note list
-│   ├── NoteScreen.tsx    # Note detail screen
-│   ├── AddNoteScreen.tsx # Add new note screen
-│   ├── EditNoteScreen.tsx # Edit existing note screen
-│   └── SettingsScreen.tsx # App settings screen
+│   ├── ArchivedScreen.tsx # Archived notes screen
+│   ├── TrashScreen.tsx   # Trashed notes screen
+│   ├── EditorScreen.tsx  # Edit note screen
+│   └── CloudSyncScreen.tsx # Cloud sync screen
 ├── services/            # Business logic and API services
 │   ├── NoteService.js    # Note CRUD operations
-|   ├── CloudSyncService.js # Cloud sync operations
-|   ├── SettingsService.js # Settings operations
+│   ├── CloudSyncService.js # Cloud sync operations
+│   ├── SettingsService.js # Settings operations
+│   ├── AuthService.js    # Authentication operations
 ├── themes/              # Theme configurations
 │   ├── theme.ts          # Main theme configuration
 │   └── ThemeContext.tsx  # Theme context for switching themes
-├── utils/               # Utility functions
-|   ├── date.ts           # Date formatting
-|   └── logger.ts         # Logging utility
+```

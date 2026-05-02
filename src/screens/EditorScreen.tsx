@@ -104,6 +104,14 @@ const EditorScreen = ({ navigation, route }: any) => {
     );
   };
 
+  const saveDraftIfNeeded = (cb?: () => void) => {
+    if (!title.trim() && !body.trim()) {
+      cb?.();
+      return;
+    }
+    _persistNote(() => cb?.());
+  };
+
   const onSave = () => {
     if (!title.trim() && !body.trim()) {
       Alert.alert('Empty note', 'Add a title or some content before saving.');
@@ -151,7 +159,7 @@ const EditorScreen = ({ navigation, route }: any) => {
         />
         <View style={[StyleSheet.absoluteFill, {backgroundColor: colors.glassBg}]} />
 
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
+        <TouchableOpacity onPress={() => saveDraftIfNeeded(() => navigation.goBack())} style={styles.iconBtn}>
           <ChevronLeft size={24} color={colors.text} />
         </TouchableOpacity>
 

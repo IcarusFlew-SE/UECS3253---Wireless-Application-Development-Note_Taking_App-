@@ -7,7 +7,9 @@
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",
-    "test": "jest"
+    "test": "jest",
+    "server": "node server.js",
+    "server:dev": "node --watch server.js"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
@@ -15,9 +17,6 @@
     "@react-native-community/datetimepicker": "^9.1.0",
     "@react-native-community/netinfo": "^12.0.1",
     "@react-native-community/slider": "^4.4.2",
-    "@react-native-firebase/app": "^24.0.0",
-    "@react-native-firebase/auth": "24.0",
-    "@react-native-firebase/firestore": "^24.0.0",
     "@react-native-masked-view/masked-view": "^0.3.2",
     "@react-native-picker/picker": "^2.11.4",
     "@react-navigation/bottom-tabs": "6.6",
@@ -25,6 +24,8 @@
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/stack": "6.0",
     "@shopify/flash-list": "^1.6.3",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
     "lucide-react-native": "^0.300.0",
     "react": "18.2.0",
     "react-native": "0.73.11",
@@ -35,7 +36,10 @@
     "react-native-screens": "3.29",
     "react-native-sqlite-storage": "^6.0.1",
     "react-native-svg": "^14.1.0",
-    "react-native-vector-icons": "^10.3.0"
+    "react-native-vector-icons": "^10.3.0",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

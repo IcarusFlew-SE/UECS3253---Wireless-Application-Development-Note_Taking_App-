@@ -30,7 +30,7 @@ const CloudSyncScreen = () => {
       setLastSync(new Date(result.at).toLocaleString());
       Alert.alert('Sync complete', `Uploaded: ${result.uploaded}\nDownloaded: ${result.downloaded}`);
     } catch (e: any) {
-      Alert.alert('Sync failed', e?.message || 'Please check cloud configuration and network.');
+      Alert.alert('Sync failed', e?.message || 'Please check WebSocket backend and network.');
     } finally {
       setIsSyncing(false);
     }
@@ -53,7 +53,7 @@ const CloudSyncScreen = () => {
           </View>
           <View style={styles.textColumn}>
             <Text style={[styles.label, { color: colors.text }]}>{uid ? `Anonymous User (${uid.substring(0, 6)}...)` : 'Offline'}</Text>
-            <Text style={[styles.subLabel, { color: colors.subtext }]}>Data Persistence: SQLite (local) + Firebase Firestore (cloud)</Text>
+            <Text style={[styles.subLabel, { color: colors.subtext }]}>Data Persistence: SQLite (local) + WebSocket API (cloud)</Text>
             <Text style={[styles.subLabel, { color: colors.subtext, marginTop: 4 }]}>Last sync: {lastSync}</Text>
           </View>
         </View>

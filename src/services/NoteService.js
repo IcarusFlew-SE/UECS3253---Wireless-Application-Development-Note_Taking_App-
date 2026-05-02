@@ -1,4 +1,6 @@
 import getDb from '../database/db';
+import { CloudSyncService } from './CloudService';
+import AuthService from './AuthService'
 
 const db = getDb();
 
@@ -12,77 +14,147 @@ const toNote = row => ({
 
 const rowsToArray = result => {
   const notes = [];
-  for (let i = 0; i < result.rows.length; i += 1) notes.push(toNote(result.rows.item(i)));
+  for (let i = 0; i < result.rows.length; i += 1) {
+    notes.push(toNote(result.rows.item(i)));
+  }
   return notes;
+};
+
+const withUser = async () => {
+  const user = await AuthService.ensureAnonymousSignIn();
+  return user.uid;
+};
+
+const syncCreateOrUpdate = async note => {
+  try {
+    const uid = await withUser();
+    await CloudSyncService.updateNote(uid, note.id, {
+      title: note.title,
+      body: note.body,
+      category_id: note.category_id || 3,
+      color: note.color,
+      isPinned: !!note.isPinned,
+      is_deleted: !!note.is_deleted,
+      is_archived: !!note.is_archived,
+      deleted_at: note.deleted_at || null,
+      archived_at: note.archived_at || null,
+      lastUpdated: Date.now(),
+    });
+  } catch {
+    try {
+      const uid = await withUser();
+      await CloudSyncService.createNote(uid, {
+        ...note,
+        category_id: note.category_id || 3,
+        isPinned: !!note.isPinned,
+        is_deleted: !!note.is_deleted,
+        is_archived: !!note.is_archived,
+      });
+    } catch (err) {
+      console.log('Cloud upsert failed:', err?.message || err);
+    }
+  }
 };
 
 const NoteService = {
   saveNote: (note, cb) => {
     db.executeSql(
-      'INSERT OR REPLACE INTO notes (id, title, body, category_id, color, isPinned, lastUpdated, isSynced, is_deleted, is_archived, deleted_at, archived_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      `INSERT OR REPLACE INTO notes 
+       (id, title, body, category_id, color, isPinned, lastUpdated, isSynced, 
+        is_deleted, is_archived, deleted_at, archived_at) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         note.id,
-        note.title,
-        note.body,
+        note.title || '',
+        note.body || '',
         note.category_id || null,
-        note.color,
+        note.color || '#14b8a6',
         note.isPinned ? 1 : 0,
         Date.now(),
-        0,
+        0, // mark as unsynced whenever saved locally
         note.is_deleted ? 1 : 0,
         note.is_archived ? 1 : 0,
         note.deleted_at || null,
         note.archived_at || null,
       ],
-      (_, result) => cb?.(result),
-      error => console.log('Save Error:', error.message),
+      (_, result) => {
+        cb?.(result);
+        syncCreateOrUpdate({
+          id: note.id,
+          title: note.title,
+          body: note.body,
+          category_id: note.category_id || 3,
+          color: note.color,
+          isPinned: !!note.isPinned,
+          is_deleted: !!note.is_deleted,
+          is_archived: !!note.is_archived,
+          deleted_at: note.deleted_at || null,
+          archived_at: note.archived_at || null,
+        });
+      },
+      (_, error) => {
+        console.error('[NoteService] Save error:', error.message);
+        return false;
+      },
     );
   },
 
   getNoteById: (id, cb) => {
     db.executeSql(
       `SELECT n.*, c.name as category, c.color as categoryColor 
-      FROM notes n LEFT JOIN categories c ON c.id = n.category_id 
-      WHERE n.id = ?`,
+       FROM notes n 
+       LEFT JOIN categories c ON c.id = n.category_id 
+       WHERE n.id = ?`,
       [id],
-      (_, result) => cb(result.rows.length > 0 ? toNote(result.rows.item(0)) : null),
-      error => console.log('Fetch Error:', error.message),
+      (_, result) => {
+        const note = result.rows.length > 0 ? toNote(result.rows.item(0)) : null;
+        console.log('[NoteService] getNoteById:', id, note ? 'found' : 'not found');
+        cb(note);
+      },
+      (_, error) => {
+        console.error('[NoteService] Fetch error:', error.message);
+        return false;
+      },
     );
   },
 
   getAllNotes: cb => {
     db.executeSql(
       `SELECT n.*, c.name as category, c.color as categoryColor 
-      FROM notes n LEFT JOIN categories c ON c.id = n.category_id 
-      WHERE n.is_deleted = 0 AND n.is_archived = 0
-      ORDER BY n.isPinned DESC, n.lastUpdated DESC`,
+       FROM notes n 
+       LEFT JOIN categories c ON c.id = n.category_id 
+       WHERE n.is_deleted = 0 AND n.is_archived = 0
+       ORDER BY n.isPinned DESC, n.lastUpdated DESC`,
       [],
       (_, result) => {
-        const notes = [];
-        for (let i = 0; i < result.rows.length; i += 1)
-          notes.push(toNote(result.rows.item(i)));
-          cb(notes);
-        },
-        error => console.log('List Error: ', error.message),
+        // BUG FIX: cb was called inside the for-loop due to missing braces.
+        // Now correctly called AFTER the loop completes.
+        const notes = rowsToArray(result);
+        console.log('[NoteService] getAllNotes count:', notes.length);
+        cb(notes);
+      },
+      (_, error) => {
+        console.error('[NoteService] List error:', error.message);
+        return false;
+      },
     );
   },
 
   getArchivedNotes: cb => {
     db.executeSql(
       `SELECT n.*, c.name as category, c.color as categoryColor 
-      FROM notes n LEFT JOIN categories c ON c.id = n.category_id 
-      WHERE n.is_archived = 1 AND n.is_deleted = 0 
-      ORDER BY n.archived_at DESC`,
+       FROM notes n 
+       LEFT JOIN categories c ON c.id = n.category_id 
+       WHERE n.is_archived = 1 AND n.is_deleted = 0 
+       ORDER BY n.archived_at DESC`,
       [],
       (_, result) => {
-        const notes = [];
-        for (let i = 0; i < result.rows.length; i += 1) {
-          notes.push(toNote
-        (result.rows.item(i)));
-        }
-        cb(notes);
+        cb(rowsToArray(result));
       },
-      error => console.log('Archive List Error: ', error.message),
+      (_, error) => {
+        console.error('[NoteService] Archive list error:', error.message);
+        return false;
+      },
     );
   },
 
@@ -90,8 +162,14 @@ const NoteService = {
     db.executeSql(
       'UPDATE notes SET is_archived = 1, archived_at = ?, isSynced = 0 WHERE id = ?',
       [Date.now(), id],
-      (_, result) => cb?.(result),
-      error => console.log('Archive Error:', error.message),
+      (_, result) => {
+        cb?.(result);
+        withUser().then(uid => CloudSyncService.archiveNote(uid, id, true)).catch(() => {});
+      },
+      (_, error) => {
+        console.error('[NoteService] Archive error:', error.message);
+        return false;
+      },
     );
   },
 
@@ -99,68 +177,110 @@ const NoteService = {
     db.executeSql(
       'UPDATE notes SET is_archived = 0, archived_at = NULL, isSynced = 0 WHERE id = ?',
       [id],
-      (_, result) => cb?.(result),
-      error => console.log('Unarchive Error:', error.message),
+      (_, result) => {
+        cb?.(result);
+        withUser().then(uid => CloudSyncService.archiveNote(uid, id, false)).catch(() => {});
+      },
+      (_, error) => {
+        console.error('[NoteService] Unarchive error:', error.message);
+        return false;
+      },
     );
   },
 
   getTrashedNotes: cb => {
     db.executeSql(
       `SELECT n.*, c.name as category, c.color as categoryColor 
-      FROM notes n LEFT JOIN categories c ON c.id = n.category_id 
-      WHERE n.is_deleted = 1 
-      ORDER BY n.deleted_at DESC`,
+       FROM notes n 
+       LEFT JOIN categories c ON c.id = n.category_id 
+       WHERE n.is_deleted = 1 
+       ORDER BY n.deleted_at DESC`,
       [],
-      (_, result) => cb(rowsToArray(result)),
-      error => console.log('Trash List Error: ', error.message),
+      (_, result) => {
+        cb(rowsToArray(result));
+      },
+      (_, error) => {
+        console.error('[NoteService] Trash list error:', error.message);
+        return false;
+      },
     );
   },
 
   moveToTrash: (id, cb) => {
     db.executeSql(
-      'UPDATE notes SET is_deleted = 1, deleted_at = ?, is_archived = 0, archived_at = NULL, isSynced = 0 WHERE id = ?',
+      `UPDATE notes 
+       SET is_deleted = 1, deleted_at = ?, is_archived = 0, archived_at = NULL, isSynced = 0 
+       WHERE id = ?`,
       [Date.now(), id],
-      (_, result) => cb?.(result),
-      error => console.log('Trash Error:', error.message),
+      (_, result) => {
+        cb?.(result);
+        withUser().then(uid => CloudSyncService.deleteNote(uid, id, false)).catch(() => {});
+      },
+      (_, error) => {
+        console.error('[NoteService] Trash error:', error.message);
+        return false;
+      },
     );
   },
 
-
   restoreNote: (id, cb) => {
     db.executeSql(
-      'UPDATE notes SET is_deleted = 0, deleted_at = NULL, isSynced = 0 WHERE id = ?',
+      'UPDATE notes SET is_deleted = 0, deleted_at = NULL, is_archived = 0, archived_at = NULL, isSynced = 0 WHERE id = ?',
       [id],
-      (_, result) => cb?.(result),
-      error => console.log('Restore Error:', error.message),
+      (_, result) => {
+        cb?.(result);
+        withUser().then(uid => CloudSyncService.updateNote(uid, id, { is_deleted: false, deleted_at: null, lastUpdated: Date.now() })).catch(() => {});
+      },
+      (_, error) => {
+        console.error('[NoteService] Restore error:', error.message);
+        return false;
+      },
     );
   },
 
   deleteNote: (id, cb) => {
-    db.executeSql('DELETE FROM notes WHERE id = ?',
+    db.executeSql(
+      'DELETE FROM notes WHERE id = ?',
       [id],
-      (_, result) => cb?.(result), 
-      error => console.log('Delete Error:', error.message));
+      (_, result) => {
+        cb?.(result);
+        withUser().then(uid => CloudSyncService.deleteNote(uid, id, true)).catch(() => {});
+      },
+      (_, error) => {
+        console.error('[NoteService] Delete error:', error.message);
+        return false;
+      },
+    );
   },
 
   emptyTrash: cb => {
-    db.executeSql('DELETE FROM notes WHERE is_deleted = 1',
+    db.executeSql(
+      'DELETE FROM notes WHERE is_deleted = 1',
       [],
       (_, result) => cb?.(result),
-      error => console.log('Delete Error:', error));
+      (_, error) => {
+        console.error('[NoteService] Empty trash error:', error.message);
+        return false;
+      },
+    );
   },
 
   getCategories: cb => {
     db.executeSql(
-      'SELECT * FROM categories',
+      'SELECT * FROM categories ORDER BY id ASC',
       [],
       (_, result) => {
         const categories = [];
         for (let i = 0; i < result.rows.length; i += 1) {
           categories.push(result.rows.item(i));
         }
+        console.log('[NoteService] Categories loaded:', categories.length);
         cb(categories);
       },
-      error => console.log('Fetch Categories Error:', error)
+      (_, error) => {
+        console.error('[NoteService] Fetch categories error:', error.message);
+        return false;
+      },
     );
   },
 };

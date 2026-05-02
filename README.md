@@ -96,7 +96,8 @@ src/
 │   ├── ThemeToggle.tsx   # Component for switching themes
 │   ├── EmptyState.tsx    # Component for empty state
 │   └── SearchBar.tsx     # Component for searching notes
-├── database/              # Database operations
+├── database/              
+│   └── db.js             # Database operations
 ├── navigation/          # Navigation setup
 │   └── AppNavigator.tsx  # Main navigator
 ├── screens/             # Application screens
@@ -109,7 +110,6 @@ src/
 │   ├── NoteService.js    # Note CRUD operations
 |   ├── CloudSyncService.js # Cloud sync operations
 |   ├── SettingsService.js # Settings operations
-│   └── db.js             # Database operations
 ├── themes/              # Theme configurations
 │   ├── theme.ts          # Main theme configuration
 │   └── ThemeContext.tsx  # Theme context for switching themes

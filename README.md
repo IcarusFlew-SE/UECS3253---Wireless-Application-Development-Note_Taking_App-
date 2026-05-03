@@ -6,7 +6,7 @@ NoteNester is a modern, feature-rich note-taking application built with React Na
 This project is a high-performance, **offline-first** mobile note-taking application built with **React Native 0.73**. It features real-time cloud synchronization, a sophisticated local database architecture, and a modern UI/UX designed for speed and reliability.
 
 ---
-## Target Users
+## 🎗️ Target Users
 Applied aesthetic and minimalistic design to appeal to general users ranging from students under modernistic context to work-life oriented users that required quick local storage of notes and cloud connectivity to sync multiple sources.
 
 ---
@@ -167,7 +167,7 @@ src/
 │   └── ThemeContext.tsx  # Theme context for switching themes
 ```
 ---
-## Potential Future Improvements
+## 🛠️ Potential Future Improvements
 - Security Encryptions on Archive Section
 - AI-Powered Note Taking
 - Enhanced Backend Logic (Database & Connectivity Synchronization)

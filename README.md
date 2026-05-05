@@ -6,6 +6,10 @@ NoteNester is a modern, feature-rich note-taking application built with React Na
 This project is a high-performance, **offline-first** mobile note-taking application built with **React Native 0.73**. It features real-time cloud synchronization, a sophisticated local database architecture, and a modern UI/UX designed for speed and reliability.
 
 ---
+## 🎗️ Target Users
+Applied aesthetic and minimalistic design to appeal to general users ranging from students under modernistic context to work-life oriented users that required quick local storage of notes and cloud connectivity to sync multiple sources.
+
+---
 
 #### 🏗️ Architecture Overview
 
@@ -72,8 +76,8 @@ The synchronization engine operates on a reactive event model:
 
 **1. Server Setup**
 ```bash
-# From project root
-npm run server
+# From project root - server.js
+npm run server / node server.js
 ```
 *Note: The server runs on port 8080 by default. Ensure `10.0.2.2` (Android Emulator) or your local IP is configured in `CloudService.js`.*
 
@@ -124,6 +128,10 @@ npx react-native run-android
    - Click the search icon in the top-right corner
    - Enter the search query
    - Notes will filter automatically
+     
+6. **Archive Notes**
+   - Archiving selective notes into archives
+   - Click to archive specific notes
 
 ---
 ## Project Structure
@@ -158,3 +166,10 @@ src/
 │   ├── theme.ts          # Main theme configuration
 │   └── ThemeContext.tsx  # Theme context for switching themes
 ```
+---
+## 🛠️ Potential Future Improvements
+- Security Encryptions on Archive Section
+- AI-Powered Note Taking
+- Enhanced Backend Logic (Database & Connectivity Synchronization)
+- Bookmarking & Notifications via Reminders Features
+---

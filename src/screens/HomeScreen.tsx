@@ -17,9 +17,9 @@ const HomeScreen = ({ navigation }: { navigation: NavigationProp<any, any> }) =>
     const [activeCat, setActiveCat] = useState('ALL'); // Track selected category
     const [notes, setNotes] = useState<any[]>([]);
 
-    const loadNotes = useCallback(() => NoteService.getAllNotes(setNotes), []);
-    useEffect(loadNotes, [loadNotes]);
-    useFocusEffect(useCallback(() => loadNotes(), [loadNotes]));
+    const loadNotes = useCallback(() => { NoteService.getAllNotes(setNotes); }, []);
+    useEffect(() => { loadNotes(); }, [loadNotes]);
+    useFocusEffect(useCallback(() => { loadNotes(); }, [loadNotes]));
     
     const filteredNotes = useMemo(
         () => notes.filter(n => (activeCat === 'ALL' || n.category === activeCat) && (`${n.title} ${n.body}`.toLowerCase().includes(search.toLowerCase()))),

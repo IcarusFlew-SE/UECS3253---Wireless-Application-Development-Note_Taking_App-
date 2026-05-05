@@ -10,8 +10,8 @@ const TrashScreen = () => {
   const { colors, isDark } = useTheme();
   const [notes, setNotes] = useState<any[]>([]);
 
-  const load = useCallback(() => NoteService.getTrashedNotes(setNotes), []);
-  useFocusEffect(useCallback(() => load(), [load]));
+  const load = useCallback(() => { NoteService.getTrashedNotes(setNotes); }, []);
+  useFocusEffect(useCallback(() => { load(); }, [load]));
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}> 

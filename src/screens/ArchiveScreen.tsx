@@ -9,8 +9,8 @@ const ArchiveScreen = () => {
   const { colors } = useTheme();
   const [notes, setNotes] = useState<any[]>([]);
 
-  const load = useCallback(() => NoteService.getArchivedNotes(setNotes), []);
-  useFocusEffect(useCallback(() => load(), [load]));
+  const load = useCallback(() => { NoteService.getArchivedNotes(setNotes); }, []);
+  useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const onRestore = (id: string) => {
     NoteService.restoreNote(id, () => load());
